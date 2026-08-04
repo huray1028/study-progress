@@ -216,22 +216,29 @@
   .primary-sm{ background:var(--accent) !important; color:#fff !important; border:none !important; }
   .primary-sm:hover{ opacity:0.88; }
 
-  .exambox{ margin-top:14px; padding-top:12px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px; }
-  .examrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:0.82rem; }
+  .exambox{ margin-top:14px; padding-top:12px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:12px; }
+  .examrow{ display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; font-size:0.82rem; }
+  .exam-basicinfo{ display:flex; gap:8px; align-items:flex-start; flex:1; min-width:300px; }
   .examlabel{
     padding:5px 8px; border-radius:4px; border:1px solid var(--border);
-    background:var(--bg); color:var(--text); font-size:0.8rem; width:160px; font-family:inherit;
+    background:var(--bg); color:var(--text); font-size:0.8rem; width:120px; font-family:inherit;
   }
   .examdate{
     padding:5px 8px; border-radius:4px; border:1px solid var(--border);
     background:var(--bg); color:var(--text); font-size:0.8rem;
   }
-  .examinfo{ color:var(--sub); }
+  .examscope{
+    padding:6px 8px; border-radius:4px; border:1px solid var(--border);
+    background:var(--bg); color:var(--text); font-size:0.78rem; font-family:inherit;
+    flex:1; min-width:200px; min-height:50px; resize:vertical;
+  }
+  .exam-inforow{ flex:1; min-width:100%; display:flex; align-items:flex-start; gap:8px; }
+  .examinfo{ color:var(--sub); flex:1; }
   .examinfo b{ color:var(--accent); }
   .examinfo.overdue{ color:var(--danger); }
   .exam-del{
     background:none; border:none; color:var(--sub); cursor:pointer; font-size:0.85rem;
-    padding:2px 7px; border-radius:4px; margin-left:auto;
+    padding:2px 7px; border-radius:4px;
   }
   .exam-del:hover{ color:var(--danger); background:var(--hover); }
 
@@ -1400,9 +1407,14 @@ function loadExamDates(){
         if (!Array.isArray(data[k])){
           const old = data[k] || {};
           const arr = [];
-          if (old.mid) arr.push({id:"mid_"+k, label:"期中考", date:old.mid});
-          if (old.final) arr.push({id:"final_"+k, label:"期末考", date:old.final});
+          if (old.mid) arr.push({id:"mid_"+k, label:"期中考", date:old.mid, scope:""});
+          if (old.final) arr.push({id:"final_"+k, label:"期末考", date:old.final, scope:""});
           data[k] = arr;
+        } else {
+          // 為舊的陣列格式添加 scope 欄位（若缺失）
+          data[k].forEach(ex=>{
+            if (!("scope" in ex)) ex.scope = "";
+          });
         }
       });
       return data;
@@ -1420,7 +1432,7 @@ function saveExamDates(){
 function addExam(key){
   if (!examDates[key]) examDates[key] = [];
   const id = "exam_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
-  examDates[key].push({id, label:"", date:""});
+  examDates[key].push({id, label:"", date:"", scope:""});
   saveExamDates();
   renderExamBox(key);
   renderExamCalendar();
@@ -1455,6 +1467,13 @@ function setExamDateNew(key, examId, date){
   renderMonthCalendar();
 }
 
+function setExamScope(key, examId, scope){
+  const ex = (examDates[key]||[]).find(e=>e.id===examId);
+  if (!ex) return;
+  ex.scope = scope;
+  saveExamDates();
+}
+
 function renderExamBox(key){
   const el = document.getElementById("exambox-"+key);
   if (!el || !RAW[key]) return;
@@ -1481,10 +1500,15 @@ function renderExamBox(key){
       }
     }
     return `<div class="examrow">
-      <input type="text" class="examlabel" value="${escapeHtml(ex.label||"")}" placeholder="考試名稱（如：期中考、小考一）" onchange="setExamLabel('${key}','${ex.id}',this.value)">
-      <input type="date" class="examdate" value="${ex.date||""}" onchange="setExamDateNew('${key}','${ex.id}',this.value)">
-      ${info}
-      <button class="exam-del" onclick="removeExam('${key}','${ex.id}')" title="刪除這場考試">✕</button>
+      <div class="exam-basicinfo">
+        <input type="text" class="examlabel" value="${escapeHtml(ex.label||"")}" placeholder="考試名稱" onchange="setExamLabel('${key}','${ex.id}',this.value)">
+        <input type="date" class="examdate" value="${ex.date||""}" onchange="setExamDateNew('${key}','${ex.id}',this.value)">
+        <button class="exam-del" onclick="removeExam('${key}','${ex.id}')" title="刪除這場考試">✕</button>
+      </div>
+      <textarea class="examscope" placeholder="考試範圍（如：Ch1~5、微積分基礎、動態規劃）" onchange="setExamScope('${key}','${ex.id}',this.value)">${escapeHtml(ex.scope||"")}</textarea>
+      <div class="exam-inforow">
+        ${info}
+      </div>
     </div>`;
   }).join("");
 
