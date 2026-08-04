@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>讀書進度追蹤</title>
+<style>
+  :root{
+    --bg:#ffffff; --page:#f7f6f3; --card:#ffffff; --text:#37352f; --sub:#787774;
+    --border:rgba(55,53,47,0.13); --border-strong:rgba(55,53,47,0.22);
+    --accent:#2383e2; --accent2:#0f7b6c;
+    --track:#edece9; --danger:#eb5757; --chip:#eeeeec;
+    --hover:rgba(55,53,47,0.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#191919; --page:#191919; --card:#202020; --text:#d4d4d4; --sub:#9b9b9b;
+      --border:rgba(255,255,255,0.11); --border-strong:rgba(255,255,255,0.2);
+      --accent:#529cca; --accent2:#4dab9a;
+      --track:#2f2f2f; --danger:#ff7369; --chip:#2f2f2f;
+      --hover:rgba(255,255,255,0.06);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#191919; --page:#191919; --card:#202020; --text:#d4d4d4; --sub:#9b9b9b;
+    --border:rgba(255,255,255,0.11); --border-strong:rgba(255,255,255,0.2);
+    --accent:#529cca; --accent2:#4dab9a;
+    --track:#2f2f2f; --danger:#ff7369; --chip:#2f2f2f;
+    --hover:rgba(255,255,255,0.06);
+  }
+  :root[data-theme="light"]{
+    --bg:#ffffff; --page:#f7f6f3; --card:#ffffff; --text:#37352f; --sub:#787774;
+    --border:rgba(55,53,47,0.13); --border-strong:rgba(55,53,47,0.22);
+    --accent:#2383e2; --accent2:#0f7b6c;
+    --track:#edece9; --danger:#eb5757; --chip:#eeeeec;
+    --hover:rgba(55,53,47,0.06);
+  }
+  * { box-sizing: border-box; }
+  body{
+    margin:0; padding:0; background:var(--page); color:var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Helvetica, Arial, sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:900px; margin:0 auto; padding:64px 32px 80px; }
+  h1{ font-size:2.1rem; font-weight:700; letter-spacing:-0.02em; margin:0 0 6px; }
+  .lead{ color:var(--sub); font-size:0.92rem; margin:0 0 32px; }
+
+  .overview{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:2px; margin-bottom:28px; background:var(--border);
+    border:1px solid var(--border); border-radius:6px; overflow:hidden;
+  }
+  .ov-card{
+    background:var(--card); padding:14px 16px; transition:background .12s;
+  }
+  .ov-card:hover{ background:var(--hover); }
+  .ov-card .name{ font-weight:600; font-size:0.92rem; display:flex; justify-content:space-between; align-items:center;}
+  .ov-card .pct{ color:var(--accent); font-weight:700; font-size:0.88rem; }
+  .ov-card .stat{ color:var(--sub); font-size:0.76rem; margin-top:3px; }
+
+  .bar{ height:6px; border-radius:3px; background:var(--track); overflow:hidden; margin-top:9px; }
+  .bar > span{ display:block; height:100%; background:var(--accent); border-radius:3px; transition:width .25s; }
+
+  .tabs{ display:flex; gap:4px; flex-wrap:wrap; margin-bottom:20px; border-bottom:1px solid var(--border); }
+  .tab-btn{
+    padding:9px 4px; margin-right:20px; border:none; border-bottom:2px solid transparent;
+    background:transparent; color:var(--sub); cursor:pointer; font-size:0.9rem;
+    font-weight:500; transition:color .12s, border-color .12s;
+  }
+  .tab-btn:hover{ color:var(--text); }
+  .tab-btn.active{ color:var(--text); border-bottom-color:var(--accent); font-weight:700; }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  .subject-head{
+    background:var(--card); border:1px solid var(--border); border-radius:6px;
+    padding:20px 22px; margin-bottom:18px;
+  }
+  .subject-head h2{ margin:0 0 4px; font-size:1.3rem; font-weight:700; letter-spacing:-0.01em; }
+  .subject-head .meta{ color:var(--sub); font-size:0.82rem; margin-bottom:12px; }
+  .subject-head .meta a{ color:var(--accent); text-decoration:none; }
+  .subject-head .meta a:hover{ text-decoration:underline; }
+  .dualbars{ display:flex; gap:24px; flex-wrap:wrap; margin-top:12px; }
+  .dualbar{ flex:1; min-width:180px; }
+  .dualbar .lbl{ display:flex; justify-content:space-between; font-size:0.78rem; color:var(--sub); margin-bottom:5px;}
+
+  .unit-list{
+    display:flex; flex-direction:column;
+    border:1px solid var(--border); border-radius:6px; overflow:hidden;
+  }
+  .unit{
+    background:var(--card); border-top:1px solid var(--border);
+    padding:9px 14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    transition:background .1s;
+  }
+  .unit:first-child{ border-top:none; }
+  .unit:hover{ background:var(--hover); }
+  .unit.done{ opacity:0.55; }
+  .unit .idx{ font-size:0.74rem; color:var(--sub); min-width:26px; font-variant-numeric:tabular-nums; }
+  .unit .info{ flex:1; min-width:220px; }
+  .unit .title{ font-size:0.9rem; }
+  .unit .sub{ display:flex; gap:8px; align-items:center; margin-top:3px; flex-wrap:wrap; }
+  .unit .len{ font-size:0.74rem; color:var(--sub); }
+  .unit .chip{
+    font-size:0.7rem; background:var(--chip); color:var(--sub);
+    padding:2px 8px; border-radius:4px; white-space:nowrap; font-weight:500;
+  }
+  .unit .watch{
+    font-size:0.78rem; color:var(--text); text-decoration:none; white-space:nowrap;
+    border:1px solid var(--border); padding:4px 10px; border-radius:4px; transition:background .1s;
+  }
+  .unit .watch:hover{ background:var(--hover); }
+  .unit label{ display:flex; align-items:center; gap:6px; font-size:0.78rem; cursor:pointer; white-space:nowrap; color:var(--sub); }
+  .unit input[type=checkbox]{
+    appearance:none; -webkit-appearance:none; width:16px; height:16px;
+    border-radius:3px; border:1.5px solid var(--border-strong); background:var(--card);
+    cursor:pointer; position:relative; margin:0; flex-shrink:0;
+  }
+  .unit input[type=checkbox]:checked{ background:var(--accent); border-color:var(--accent); }
+  .unit input[type=checkbox]:checked::after{
+    content:""; position:absolute; left:4px; top:0px; width:4px; height:8px;
+    border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg);
+  }
+
+  .toolbar{
+    display:flex; gap:8px; flex-wrap:wrap; margin:24px 0; align-items:center;
+  }
+  .btn{
+    background:var(--card); border:1px solid var(--border); color:var(--text);
+    padding:7px 12px; border-radius:4px; cursor:pointer; font-size:0.83rem; transition:background .1s;
+  }
+  .btn:hover{ background:var(--hover); }
+  .btn.danger{ color:var(--danger); }
+  .btn.danger:hover{ background:var(--danger); color:#fff; border-color:var(--danger); }
+  .savehint{ font-size:0.76rem; color:var(--sub); }
+  #importFile{ display:none; }
+
+  .addbox{
+    background:var(--card); border:1px solid var(--border); border-radius:6px;
+    padding:18px 20px; margin-bottom:18px;
+  }
+  .addbox h3{ margin:0 0 6px; font-size:1rem; font-weight:700; }
+  .addbox .hint{ color:var(--sub); font-size:0.8rem; margin:0 0 14px; line-height:1.6; }
+  .addbox .apirow{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+  .addbox .apirow input{ flex:1; min-width:220px; }
+  .addbox .apistatus{ font-size:0.78rem; color:var(--sub); white-space:nowrap; }
+  .addbox .fields{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-bottom:12px; }
+  .addbox input, .addbox textarea{
+    width:100%; padding:8px 10px; border-radius:4px; border:1px solid var(--border);
+    background:var(--bg); color:var(--text); font-size:0.85rem; font-family:inherit;
+  }
+  .addbox input:focus, .addbox textarea:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+  .addbox .actions{ display:flex; align-items:center; gap:10px; }
+  .addbox .primary{
+    background:var(--accent); color:#fff; border:none; padding:8px 16px; border-radius:4px;
+    cursor:pointer; font-size:0.85rem; font-weight:600; transition:opacity .1s;
+  }
+  .addbox .primary:hover{ opacity:0.88; }
+  .addbox .primary:disabled{ opacity:0.5; cursor:default; }
+  .addbox a{ color:var(--accent); }
+  .addbox details{ font-size:0.78rem; color:var(--sub); margin-top:6px; }
+  .addbox summary{ cursor:pointer; }
+
+  .del-btn, .edit-btn{
+    font-size:0.75rem; color:var(--sub); background:none; border:1px solid var(--border);
+    padding:4px 10px; border-radius:4px; cursor:pointer; float:right; margin-left:8px; transition:color .1s, border-color .1s;
+  }
+  .del-btn:hover{ color:var(--danger); border-color:var(--danger); }
+  .edit-btn:hover{ color:var(--accent); border-color:var(--accent); }
+
+  .headtop{ position:relative; margin-bottom:4px; }
+  .editrow{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .editrow input{
+    padding:7px 10px; border-radius:4px; border:1px solid var(--border);
+    background:var(--bg); color:var(--text); font-size:0.9rem; font-family:inherit; flex:1; min-width:160px;
+  }
+  .editrow input:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+  .editactions{ display:flex; gap:8px; margin-bottom:4px; }
+  .primary-sm{ background:var(--accent) !important; color:#fff !important; border:none !important; }
+  .primary-sm:hover{ opacity:0.88; }
+
+  .exambox{ margin-top:14px; padding-top:12px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px; }
+  .examrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:0.82rem; }
+  .examlabel{
+    padding:5px 8px; border-radius:4px; border:1px solid var(--border);
+    background:var(--bg); color:var(--text); font-size:0.8rem; width:160px; font-family:inherit;
+  }
+  .examdate{
+    padding:5px 8px; border-radius:4px; border:1px solid var(--border);
+    background:var(--bg); color:var(--text); font-size:0.8rem;
+  }
+  .examinfo{ color:var(--sub); }
+  .examinfo b{ color:var(--accent); }
+  .examinfo.overdue{ color:var(--danger); }
+  .exam-del{
+    background:none; border:none; color:var(--sub); cursor:pointer; font-size:0.85rem;
+    padding:2px 7px; border-radius:4px; margin-left:auto;
+  }
+  .exam-del:hover{ color:var(--danger); background:var(--hover); }
+
+  .studystats{ margin-top:14px; padding-top:12px; border-top:1px solid var(--border); font-size:0.82rem; }
+  .studystats .statline{ color:var(--text); margin-bottom:6px; }
+  .studystats .statline b{ color:var(--accent2); }
+  .studyrecent{ display:flex; gap:6px; flex-wrap:wrap; }
+  .studychip{
+    font-size:0.7rem; background:var(--chip); color:var(--sub);
+    padding:2px 8px; border-radius:4px;
+  }
+
+  .timerbox{
+    background:var(--card); border:1px solid var(--border); border-radius:6px;
+    padding:18px 20px; margin-bottom:18px;
+  }
+  .timerbox h3{ margin:0 0 12px; font-size:1rem; font-weight:700; }
+  .timerrow{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:12px; }
+  .timerrow select{
+    padding:8px 10px; border-radius:4px; border:1px solid var(--border);
+    background:var(--bg); color:var(--text); font-size:0.85rem; min-width:160px; font-family:inherit;
+  }
+  .timerdisplay{
+    font-size:2rem; font-weight:700; font-variant-numeric:tabular-nums;
+    letter-spacing:0.02em; color:var(--text);
+  }
+  .timeractions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  .calbox{
+    background:var(--card); border:1px solid var(--border); border-radius:6px;
+    padding:18px 20px; margin-bottom:18px;
+  }
+  .calbox h3{ margin:0 0 12px; font-size:1rem; font-weight:700; }
+  .monthcal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .monthcal-head .navbtn{
+    background:none; border:none; color:var(--accent); font-size:1.2rem; cursor:pointer;
+    padding:2px 12px; border-radius:4px; line-height:1.4;
+  }
+  .monthcal-head .navbtn:hover{ background:var(--hover); }
+  .monthcal-head .title{ font-weight:700; font-size:0.95rem; }
+  .monthcal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .monthcal-dow{ text-align:center; font-size:0.72rem; color:var(--sub); padding-bottom:6px; font-weight:600; }
+  .monthcal-day{
+    aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border-radius:8px; cursor:pointer; position:relative; font-size:0.82rem; gap:3px;
+    background:var(--card); border:1px solid transparent; transition:background .1s;
+  }
+  .monthcal-day:hover{ background:var(--hover); }
+  .monthcal-day.muted{ color:var(--sub); opacity:0.35; cursor:default; }
+  .monthcal-day.muted:hover{ background:none; }
+  .monthcal-day .daynum{
+    width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:50%;
+  }
+  .monthcal-day.today .daynum{ background:var(--accent); color:#fff; font-weight:700; }
+  .monthcal-day.selected{ border-color:var(--accent); }
+  .monthcal-day .dots{ display:flex; gap:3px; height:5px; }
+  .monthcal-day .dot{ width:5px; height:5px; border-radius:50%; }
+  .monthcal-day .dot.exam{ background:var(--danger); }
+  .monthcal-day .dot.study{ background:var(--accent2); }
+
+  .calday-detail{ margin-top:14px; padding-top:12px; border-top:1px solid var(--border); font-size:0.84rem; }
+  .calday-detail .calday-title{ font-weight:700; margin-bottom:6px; }
+  .calday-detail .empty{ color:var(--sub); margin:0; }
+  .calday-detail .item{ display:flex; justify-content:space-between; padding:4px 0; }
+
+  .calrow{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    padding:9px 0; border-top:1px solid var(--border); font-size:0.84rem;
+  }
+  .calrow:first-of-type{ border-top:none; }
+  .calrow .caldate{ font-weight:700; color:var(--accent); min-width:90px; font-variant-numeric:tabular-nums; }
+  .calrow.overdue .caldate{ color:var(--danger); }
+  .calrow .calsubject{ min-width:150px; font-weight:600; }
+  .calrow .calinfo{ color:var(--sub); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📚 讀書進度追蹤</h1>
+  <p class="lead">電子學一・電路學二・工程數學・電磁學 — 觀看進度與練習題勾選（資料儲存於本機瀏覽器）</p>
+
+  <div class="overview" id="overview"></div>
+
+  <div class="timerbox">
+    <h3>⏱ 讀書計時器</h3>
+    <div class="timerrow">
+      <select id="timerSubjectSelect"></select>
+      <div class="timerdisplay" id="timerDisplay">00:00:00</div>
+    </div>
+    <div class="timeractions">
+      <button class="btn primary-sm" id="timerStartPauseBtn" onclick="timerStartPause()">▶ 開始</button>
+      <button class="btn" onclick="timerFinish()">✔ 結束並記錄</button>
+      <button class="btn" onclick="timerCancel()">✕ 取消</button>
+    </div>
+  </div>
+
+  <div class="calbox">
+    <div class="monthcal-head">
+      <button class="navbtn" onclick="calPrevMonth()">‹</button>
+      <span class="title" id="monthCalTitle"></span>
+      <button class="navbtn" onclick="calNextMonth()">›</button>
+    </div>
+    <div class="monthcal-grid" id="monthCalGrid"></div>
+    <div class="calday-detail" id="calDayDetail"></div>
+    <h3 style="margin-top:20px;">📅 近期考試倒數</h3>
+    <div id="examCalendar"></div>
+  </div>
+
+  <div class="addbox">
+    <h3>➕ 新增追蹤科目</h3>
+    <p class="hint">
+      貼上 YouTube「播放清單」的完整分享連結（網址需包含 <code>list=</code> 參數，例如
+      <code>https://youtube.com/playlist?list=PL68D2uCy1WTMtp1m5TEJbKEt4kvlA4jLP</code>），
+      系統會依照播放清單順序自動抓取每一部影片的標題與時長，自動分集並加入觀看／練習題追蹤。
+      需要先設定一組 YouTube API 金鑰（僅存於本機瀏覽器，不會上傳）。
+    </p>
+    <div class="apirow">
+      <input type="password" id="ytApiKeyInput" placeholder="貼上你的 YouTube Data API 金鑰">
+      <button class="btn" onclick="saveApiKeyFromInput()">儲存金鑰</button>
+      <span class="apistatus" id="apiKeyStatus"></span>
+    </div>
+    <details>
+      <summary>如何取得免費的 YouTube API 金鑰？</summary>
+      至 Google Cloud Console 建立專案 → 啟用「YouTube Data API v3」→ 建立憑證（API 金鑰）→ 複製貼到上方欄位。個人使用每日額度通常相當充足。
+    </details>
+    <div class="fields" style="margin-top:12px;">
+      <input type="text" id="newSubjName" placeholder="科目名稱（必填，例如：數位邏輯設計）">
+      <input type="text" id="newSubjTeacher" placeholder="授課老師（選填）">
+      <input type="text" id="newSubjUrl" placeholder="YouTube 播放清單完整連結（必填）">
+      <input type="text" id="newSubjNote" placeholder="教材／章節對照備註（選填）">
+    </div>
+    <div class="actions">
+      <button class="primary" id="newSubjSubmitBtn" onclick="submitNewSubject()">＋ 自動抓取並建立科目</button>
+      <span class="savehint" id="addSubjHint"></span>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="panels"></div>
+
+  <div class="toolbar">
+    <button class="btn" onclick="exportData()">⬇ 匯出進度 (JSON)</button>
+    <button class="btn" onclick="document.getElementById('importFile').click()">⬆ 匯入進度</button>
+    <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+    <button class="btn danger" onclick="resetAll()">重設全部進度</button>
+    <button class="btn" onclick="restoreDeletedBuiltins()">還原已刪除的預設科目</button>
+    <span class="savehint" id="saveHint"></span>
+  </div>
+</div>
+
+<script>
+/* ---------- 章節對照表 ---------- */
+
+// 電路學：依單元編號對照 Hayt《Engineering Circuit Analysis》章節
+const CIRCUITS_CHAPTERS = [
+  {max:1,  ch:"Hayt Ch.1 導論"},
+  {max:4,  ch:"Hayt Ch.2-3 基本元件與KVL/KCL"},
+  {max:9,  ch:"Hayt Ch.3-4 電阻電路化簡、節點電壓法/網目電流法"},
+  {max:14, ch:"Hayt Ch.5 重疊原理、戴維寧/諾頓等效電路、最大功率轉移"},
+  {max:15, ch:"Hayt Ch.7 電容器與電感器"},
+  {max:18, ch:"Hayt Ch.8 RC/RL電路"},
+  {max:21, ch:"Hayt Ch.9 RLC電路"},
+  {max:25, ch:"Hayt Ch.10 弦波穩態分析（相量法）"},
+  {max:28, ch:"Hayt Ch.11 交流穩態功率分析"},
+  {max:30, ch:"Hayt Ch.12 三相電路"},
+  {max:35, ch:"Hayt Ch.17 雙埠網路"},
+  {max:40, ch:"Hayt Ch.14-15 拉普拉斯轉換電路分析"},
+  {max:45, ch:"Hayt Ch.16 頻率響應（濾波器）"},
+  {max:49, ch:"Hayt Ch.18 傅立葉級數電路分析"},
+];
+function circuitsChapter(n){
+  for (const r of CIRCUITS_CHAPTERS) if (n <= r.max) return r.ch;
+  return "";
+}
+
+// 電子學(一)：影片編號 01~11 對照 Sedra & Smith《Microelectronic Circuits》章節
+const SEDRA_CHAPTERS = {
+  "01":"Sedra/Smith Ch.1 訊號與放大器",
+  "02":"Sedra/Smith Ch.2 運算放大器",
+  "03":"Sedra/Smith Ch.3 半導體",
+  "04":"Sedra/Smith Ch.4 二極體",
+  "05":"Sedra/Smith Ch.5 MOSFET",
+  "06":"Sedra/Smith Ch.6 雙極性接面電晶體 (BJT)",
+  "07":"Sedra/Smith Ch.7 IC放大器基本架構",
+  "08":"Sedra/Smith Ch.8 差動與多級放大器",
+  "09":"Sedra/Smith Ch.9 頻率響應",
+  "10":"Sedra/Smith Ch.10 回授 (Feedback)",
+  "11":"Sedra/Smith Ch.11 輸出級與功率放大器",
+};
+function electronicsChapter(title){
+  const m = title.match(/[_-](\d{2})[_-]\d/);
+  return m ? (SEDRA_CHAPTERS[m[1]] || "") : "";
+}
+
+// 工程數學：影片標題已含「第X章」，直接對照姚賀騰《工程數學》
+function mathChapter(title){
+  const m = title.match(/第[一二三四五六七八九十]+章/);
+  return "姚賀騰《工程數學》" + (m ? m[0] : "");
+}
+
+// 電磁學：影片標題已含 Ulaby 章節編號
+function emagChapter(title){
+  let m = title.match(/^(\d+\.\d+)/);
+  if (m) return "Ulaby §" + m[1];
+  m = title.match(/^CH(\d+)/);
+  if (m) return "Ulaby Ch." + m[1];
+  return "Ulaby（課前複習）";
+}
+
+/* ---------- 播放清單原始資料 ---------- */
+
+const RAW = {
+  circuits: [
+  {id:"vupQZd8bm8M", t:"單元 1．電路學課程導論", len:"28 分鐘"},
+  {id:"EAK3GX2I85s", t:"單元 2．基本電路觀念：電路變數的定義", len:"42 分鐘"},
+  {id:"KzmuQfhxoa8", t:"單元 3．基本電路觀念：元件模型", len:"1 小時 34 分鐘"},
+  {id:"yQHMJyqW0K4", t:"單元 4．基本電路觀念：元件模型、KCL與KVL", len:"45 分鐘"},
+  {id:"p0OxaKE5Fv8", t:"單元 5．基本電路觀念 - 2B法", len:"46 分鐘"},
+  {id:"83lApfsCUH4", t:"單元 6．基本電路觀念 - 簡單電阻網路的速解法", len:"1 小時 34 分鐘"},
+  {id:"Aq4GZw3YwvI", t:"單元 7 ．進階電路分析 - 節點電壓法", len:"46 分鐘"},
+  {id:"ZlYT-4C3tdA", t:"單元 8 ．進階電路分析 - 節點電壓法與網目電流法", len:"1 小時 26 分鐘"},
+  {id:"0tFE9hvNKfY", t:"單元 9 ．進階電路分析 - 網目電流法", len:"45 分鐘"},
+  {id:"Y3lqsvrg0-8", t:"單元 10 ．進階電路分析 - 重疊原理", len:"1 小時 21 分鐘"},
+  {id:"i5u2GwnhmjI", t:"單元 11 ．進階電路分析 - 電源轉換與戴維寧等效電路的目的", len:"37 分鐘"},
+  {id:"Uz4BJyTbjnY", t:"單元 12 ．進階電路分析 - 戴維寧等效電路與諾頓等效電路", len:"1 小時 7 分鐘"},
+  {id:"1L1PQOyC9zo", t:"單元 13 ．進階電路分析 - 最大功率轉移定理", len:"34 分鐘"},
+  {id:"R8ekpXf6U4A", t:"單元 14 ．進階電路分析 - 戴維寧等效電路的證明", len:"1 小時 2 分鐘"},
+  {id:"MtEV-kNCwuE", t:"單元 15 ．儲能元件的電路分析 - 電容器與電感器", len:"1 小時 15 分鐘"},
+  {id:"sphg30hr6qo", t:"單元 16．儲能元件的電路分析 - RC、RL電路的系統化解法（一）", len:"40 分鐘"},
+  {id:"V0y_YSOcUbo", t:"單元 17．儲能元件的電路分析 - RC、RL電路的系統化解法（二）", len:"1 小時 26 分鐘"},
+  {id:"d88Ri_CT4Zc", t:"單元 18．儲能元件的電路分析 - RC、RL電路的系統化解法（三）", len:"41 分鐘"},
+  {id:"3To6yzRgFQQ", t:"單元 19．儲能元件的電路分析 - RLC電路的系統化解法（一）", len:"1 小時 21 分鐘"},
+  {id:"XebauFnGfKM", t:"單元 20．儲能元件的電路分析 - RLC電路的系統化解法（二）", len:"32 分鐘"},
+  {id:"Ldo_2gDyKks", t:"單元 21．儲能元件的電路分析 - RLC電路的系統化解法（三）", len:"1 小時 18 分鐘"},
+  {id:"gKKgzkom-4k", t:"單元 22．弦波穩態分析 - 相量分析", len:"46 分鐘"},
+  {id:"MHrjbM20yQM", t:"單元 23．弦波穩態分析 - 相域的元件模型、阻抗的定義", len:"1 小時 22 分鐘"},
+  {id:"-X61dUFLmfE", t:"單元 24．弦波穩態分析 - 相域的節點電壓法與網目電流法", len:"36 分鐘"},
+  {id:"F1hahx8Swng", t:"單元 25．弦波穩態分析 - 相域與時域解法的一致性、重疊原理", len:"1 小時 23 分鐘"},
+  {id:"-Dys1ZSlPrI", t:"單元 26．弦波穩態分析 - 交流穩態功率分析", len:"1 小時 29 分鐘"},
+  {id:"qgN8axjUyDg", t:"單元 27．弦波穩態分析 - 六種交流穩態功率的算法", len:"34 分鐘"},
+  {id:"VEydQPn2wWo", t:"單元 28．弦波穩態分析 - 交流電的功率守恆、三相電路簡介", len:"1 小時 27 分鐘"},
+  {id:"irfiv0hGNT0", t:"單元 29．弦波穩態分析 - 平衡三相電路的專有名詞與相域關係", len:"35 分鐘"},
+  {id:"V2Wowfq5Emw", t:"單元 30．弦波穩態分析 - 平衡三相電路", len:"1 小時 27 分鐘"},
+  {id:"m46j180Ysi8", t:"單元 31．雙埠網路 - 非平衡三相電路、雙埠網路概論", len:"1 小時 24 分鐘"},
+  {id:"O_rqT0NwCQM", t:"單元 32．雙埠網路 - 網路參數的計算方法（一）", len:"41 分鐘"},
+  {id:"QIuRl_TqLrQ", t:"單元 33．雙埠網路 - 網路參數的計算方法（二）", len:"1 小時 26 分鐘"},
+  {id:"cP6Ia8Fu_d0", t:"單元 34．雙埠網路 - 特殊網路的定義以及網路參數的應用", len:"1 小時 24 分鐘"},
+  {id:"TygFF1UIx9U", t:"單元 35．雙埠網路 - 網路參數的應用", len:"45 分鐘"},
+  {id:"aRE1OF7hJUg", t:"單元 36．拉普拉斯轉換的電路分析 - 複頻域簡介及其電路法則", len:"1 小時 30 分鐘"},
+  {id:"wmNqKmNanv8", t:"單元 37．拉普拉斯轉換的電路分析 - 複頻域的電路解法（一）", len:"41 分鐘"},
+  {id:"OwyzEOTyMjQ", t:"單元 38．拉普拉斯轉換的電路分析 - 複頻域的電路解法（二）", len:"58 分鐘"},
+  {id:"1RVcnzlc7ug", t:"單元 39．拉普拉斯轉換的電路分析 - 轉移函數（一）", len:"38 分鐘"},
+  {id:"Gw_H4xUqKfM", t:"單元 40．拉普拉斯轉換的電路分析 - 轉移函數（二）", len:"1 小時 24 分鐘"},
+  {id:"_Ro6EGquQ_g", t:"單元 41．頻率選擇電路 - 概述及低通濾波器", len:"39 分鐘"},
+  {id:"7q0LGQqpztY", t:"單元 42．頻率選擇電路 - 低通濾波器與高通濾波器", len:"1 小時 15 分鐘"},
+  {id:"Xpb1iQ9wZqg", t:"單元 43．頻率選擇電路 - 帶通濾波器（一）", len:"56 分鐘"},
+  {id:"hoCuHxUE8ag", t:"單元 44．頻率選擇電路 - 帶通濾波器（二）", len:"1 小時 10 分鐘"},
+  {id:"KngnZZL_uFk", t:"單元 45．頻率選擇電路 - 帶拒濾波器", len:"1 小時 9 分鐘"},
+  {id:"YZ-fiW3OgFI", t:"單元 46．傅立葉級數的電路分析 - 傅立葉級數的目的、形式與物理意義", len:"1 小時 8 分鐘"},
+  {id:"MOI7UnJbAso", t:"單元 47．傅立葉級數的電路分析 - 利用週期函數的對稱性計算傅立葉級數", len:"57 分鐘"},
+  {id:"LljQJddOIC8", t:"單元 48．傅立葉級數的電路分析 - 週期性電源的電路解題", len:"1 小時 18 分鐘"},
+  {id:"UO_XXerHVR0", t:"單元 49．傅立葉級數的電路分析 - 週期性電源的功率計算", len:"56 分鐘"},
+  ],
+
+  math: [
+  {id:"KApUpRjouk4", t:"工程數學第一章單元一：微分方程總論", len:"43 分鐘"},
+  {id:"fVg9fY6omF8", t:"工程數學第一章單元二：分離變數型一階ODE(1/2)", len:"32 分鐘"},
+  {id:"2l6jEYu4xjM", t:"工程數學第一章單元二：分離變數型一階ODE(2/2)", len:"33 分鐘"},
+  {id:"ZGSOZkgixnY", t:"工程數學第一章單元三：正合ODE與積分因子(1/2)", len:"46 分鐘"},
+  {id:"EEYSxJKQMsQ", t:"工程數學第一章單元三：正合ODE與積分因子(2/2)", len:"33 分鐘"},
+  {id:"SHgP3-OFNpE", t:"工程數學第一章單元四：線性ODE(1/3)", len:"37 分鐘"},
+  {id:"IGONNcnP2q8", t:"工程數學第一章單元四：線性ODE(2/3)", len:"24 分鐘"},
+  {id:"G4MsunHN7mw", t:"工程數學第一章單元四：線性ODE(3/3)", len:"30 分鐘"},
+  {id:"SYQZc1CDX40", t:"工程數學第一章單元五：合併法求解一階ODE", len:"40 分鐘"},
+  {id:"WhODhuJEN7M", t:"工程數學第一章單元六：一階ODE之應用(1/2)", len:"36 分鐘"},
+  {id:"pwNPjXsUpDI", t:"工程數學第一章單元六：一階ODE之應用(2/2)", len:"48 分鐘"},
+  {id:"r6fCOYBqr-E", t:"工程數學第二章單元一：基本理論(1/3)", len:"39 分鐘"},
+  {id:"207cQgvCAeQ", t:"工程數學第二章單元一：基本理論(2/3)", len:"44 分鐘"},
+  {id:"mVfTmngbVvw", t:"工程數學第二章單元一：基本理論(3/3)", len:"44 分鐘"},
+  {id:"L2KB5SFWYpI", t:"工程數學第二章單元二：降階法求解高階ODE", len:"39 分鐘"},
+  {id:"PrxAV5pimfI", t:"工程數學第二章單元三：高階ODE齊性解", len:"42 分鐘"},
+  {id:"iFxI7Fr_1lo", t:"工程數學第二章單元四：待定係數法求特解", len:"32 分鐘"},
+  {id:"9xdfP-jkYfI", t:"工程數學第二章單元五：參數變異法求特解", len:"46 分鐘"},
+  {id:"ypN6PLq_UmE", t:"工程數學第二章單元六：逆運算子法求特解(1/4)", len:"38 分鐘"},
+  {id:"PYX_YVkojPA", t:"工程數學第二章單元六：逆運算子法求特解(2/4)", len:"40 分鐘"},
+  {id:"7udmOtsNgGc", t:"工程數學第二章單元六：逆運算子法求特解(3/4)", len:"40 分鐘"},
+  {id:"Pzr1oXhYyno", t:"工程數學第二章單元六：逆運算子法求特解(4/4)", len:"23 分鐘"},
+  {id:"dRZtTA1u-Lk", t:"工程數學第二章單元七：等維線性ODE(1/2)", len:"34 分鐘"},
+  {id:"-y8YiEIkSrw", t:"工程數學第二章單元七：等維線性ODE(2/2)", len:"23 分鐘"},
+  {id:"8k5yV5bpFMc", t:"工程數學第三章單元一：拉氏轉換定義(1/2)", len:"29 分鐘"},
+  {id:"xIG13PyuK3w", t:"工程數學第三章單元一：拉氏轉換定義(2/2)", len:"35 分鐘"},
+  {id:"17pObFR442s", t:"工程數學第三章單元二：基本性質定理(1/4)", len:"40 分鐘"},
+  {id:"9KwV-iFHTEc", t:"工程數學第三章單元二：基本性質定理(2/4)", len:"45 分鐘"},
+  {id:"zOj9nWtIyww", t:"工程數學第三章單元二：基本性質定理(3/4)", len:"55 分鐘"},
+  {id:"a00uBbOMXt4", t:"工程數學第三章單元二：基本性質定理(4/4)", len:"21 分鐘"},
+  {id:"GZUqFaZpumI", t:"工程數學第三章單元三：特殊函數的拉氏轉換(1/2)", len:"39 分鐘"},
+  {id:"TDqbtt2I7YY", t:"工程數學第三章單元三：特殊函數的拉氏轉換(2/2)", len:"36 分鐘"},
+  {id:"DdaecvNfnC0", t:"工程數學第三章單元四：拉氏反轉換(1/2)", len:"35 分鐘"},
+  {id:"-LmNlnS4O4U", t:"工程數學第三章單元四：拉氏反轉換(2/2)", len:"43 分鐘"},
+  {id:"j4Ze_rbLvz4", t:"工程數學第三章單元五：拉氏轉換的應用", len:"1 小時 8 分鐘"},
+  {id:"Si4OJItI-n4", t:"工程數學第四章單元一：常點展開求解ODE(1/2)", len:"1 小時 3 分鐘"},
+  {id:"cSRbRKF6Pfw", t:"工程數學第四章單元一：常點展開求解ODE(2/2)", len:"49 分鐘"},
+  {id:"kcvvCLkD1Ac", t:"工程數學第四章單元二：規則奇點展開求點ODE(1/3)", len:"51 分鐘"},
+  {id:"vJPC03PFPZE", t:"工程數學第四章單元二：規則奇點展開求點ODE(2/3)", len:"48 分鐘"},
+  {id:"INa2XCx5JMo", t:"工程數學第四章單元二：規則奇點展開求點ODE(3/3)", len:"1 小時 3 分鐘"},
+  {id:"UfL_dsdPWNg", t:"工程數學第五章單元一：向量的基本運算", len:"1 小時 45 分鐘"},
+  {id:"t_5aRIJx00A", t:"工程數學第五章單元二：向量幾何(1/2)", len:"1 小時 1 分鐘"},
+  {id:"Z3srJ8yJG5k", t:"工程數學第五章單元二：向量幾何(2/2)", len:"52 分鐘"},
+  {id:"wORrLgTKv5M", t:"工程數學第五章單元三：向量空間(1/3)", len:"52 分鐘"},
+  {id:"UvbRXp1sdAw", t:"工程數學第五章單元三：向量空間(2/3)", len:"56 分鐘"},
+  {id:"00r-BkwVXHI", t:"工程數學第五章單元三：向量空間(3/3)", len:"58 分鐘"},
+  {id:"OwdgSkVXC9s", t:"工程數學第六章單元一：矩陣定義與基本運算(1/2)", len:"1 小時 11 分鐘"},
+  {id:"ZplcnpkoUTQ", t:"工程數學第六章單元一：矩陣定義與基本運算(2/2)", len:"34 分鐘"},
+  {id:"xmG0Q5rjlaQ", t:"工程數學第六章單元二：矩陣的列行與行列式(1/2)", len:"1 小時 2 分鐘"},
+  {id:"ZiXOOS_Ysjk", t:"工程數學第六章單元二：矩陣的列行與行列式(2/2)", len:"48 分鐘"},
+  {id:"sqEgPPrcbiE", t:"工程數學第六章單元三：線性聯立方程式組的解(1/5)", len:"48 分鐘"},
+  {id:"sUnxm-wKJIA", t:"工程數學第六章單元三：線性聯立方程式組的解(2/5)", len:"46 分鐘"},
+  {id:"Fqtd7aDzxwg", t:"工程數學第六章單元三：線性聯立方程式組的解(3/5)", len:"50 分鐘"},
+  {id:"aQGLz0O3m-8", t:"工程數學第六章單元三：線性聯立方程式組的解(4/5)", len:"30 分鐘"},
+  {id:"j316_l-USdY", t:"工程數學第六章單元三：線性聯立方程式組的解(5/5)", len:"45 分鐘"},
+  {id:"LTICwz1dwcQ", t:"工程數學第六章單元四：特徵值與特徵向量(1/5)", len:"38 分鐘"},
+  {id:"8kUajqhAoF4", t:"工程數學第六章單元四：特徵值與特徵向量(2/5)", len:"30 分鐘"},
+  {id:"p11m74Xqxss", t:"工程數學第六章單元四：特徵值與特徵向量(3/5)", len:"23 分鐘"},
+  {id:"s1SXmAKRTfE", t:"工程數學第六章單元四：特徵值與特徵向量(4/5)", len:"25 分鐘"},
+  {id:"8bxIFSA5rFs", t:"工程數學第六章單元四：特徵值與特徵向量(5/5)", len:"32 分鐘"},
+  {id:"FsLwibQKoGg", t:"工程數學第六章單元五：矩陣對角化", len:"53 分鐘"},
+  {id:"7kWVwT2aXEo", t:"工程數學第六章單元六：方陣函數", len:"1 小時 18 分鐘"},
+  {id:"kWtduBboa1M", t:"工程數學第七章單元一：一階聯立線性微分方程式的解(1/2)", len:"18 分鐘"},
+  {id:"hEqm7f_oRF0", t:"工程數學第七章單元一：一階聯立線性微分方程式的解(2/2)", len:"36 分鐘"},
+  {id:"Hg2rT0pIucs", t:"工程數學第七章單元二：齊性聯立微分方程系統的解(1/3)", len:"41 分鐘"},
+  {id:"xZ8efv8AqR8", t:"工程數學第七章單元二：齊性聯立微分方程系統的解(2/3)", len:"41 分鐘"},
+  {id:"sePXoYnBIRg", t:"工程數學第七章單元二：齊性聯立微分方程系統的解(3/3)", len:"24 分鐘"},
+  {id:"66MZ3MXkxXs", t:"工程數學第七章單元三：矩陣對角化求解非齊性聯立微分方程系統", len:"40 分鐘"},
+  {id:"l6kTyY7x8ck", t:"工程數學第八章單元一：向量函數與微分(1/2)", len:"59 分鐘"},
+  {id:"KbDBmh6z1Dw", t:"工程數學第八章單元一：向量函數與微分(2/2)", len:"1 小時 4 分鐘"},
+  {id:"JdCI2mY6XPA", t:"工程數學第八章單元二：方向導數(1/3)", len:"43 分鐘"},
+  {id:"ZrRs8hHXB_g", t:"工程數學第八章單元二：方向導數(2/3)", len:"39 分鐘"},
+  {id:"POG2-qQCBMs", t:"工程數學第八章單元二：方向導數(3/3)", len:"45 分鐘"},
+  {id:"E83ui9_hZqM", t:"工程數學第八章單元三：線積分(1/4)", len:"38 分鐘"},
+  {id:"JBmV37bp4uU", t:"工程數學第八章單元三：線積分(2/4)", len:"34 分鐘"},
+  {id:"wfkk0JgdG5M", t:"工程數學第八章單元三：線積分(3/4)", len:"29 分鐘"},
+  {id:"mOjR_Cm15vU", t:"工程數學第八章單元三：線積分(4/4)", len:"36 分鐘"},
+  {id:"CeI1LMmg9o0", t:"工程數學第八章單元四：重積分(1/3)", len:"51 分鐘"},
+  {id:"HLe6I7-JeVk", t:"工程數學第八章單元四：重積分(2/3)", len:"44 分鐘"},
+  {id:"gKI7jeZf25Y", t:"工程數學第八章單元四：重積分(3/3)", len:"44 分鐘"},
+  {id:"4j_LVnhwof0", t:"工程數學第八章單元五：面積分(空間曲面積分)(1/2)", len:"56 分鐘"},
+  {id:"Y5OUFI-HaQM", t:"工程數學第八章單元五：面積分(空間曲面積分)(2/2)", len:"53 分鐘"},
+  {id:"4Ns4X7sEuP0", t:"工程數學第八章單元六：格林定理", len:"45 分鐘"},
+  {id:"Lr56LB436G4", t:"工程數學第八章單元七：高斯散度定理(1/2)", len:"50 分鐘"},
+  {id:"CnffaSoVPXE", t:"工程數學第八章單元七：高斯散度定理(2/2)", len:"38 分鐘"},
+  {id:"PXYdgnqlhWE", t:"工程數學第八章單元八：史托克定理", len:"1 小時 10 分鐘"},
+  {id:"Zj-mdWbEsF8", t:"工程數學第九章單元一：正交函數(1/4)", len:"51 分鐘"},
+  {id:"TSYPtV5fVV0", t:"工程數學第九章單元一：正交函數(2/4)", len:"49 分鐘"},
+  {id:"iACd3E3mLII", t:"工程數學第九章單元一：正交函數(3/4)", len:"39 分鐘"},
+  {id:"Ggly4E9VG_0", t:"工程數學第九章單元一：正交函數(4/4)", len:"55 分鐘"},
+  {id:"lGZRqs9lRwI", t:"工程數學第九章單元二：傅立葉級數(1/4)", len:"51 分鐘"},
+  {id:"RiPV_UKbG1Q", t:"工程數學第九章單元二：傅立葉級數(2/4)", len:"1 小時"},
+  {id:"4QNluuVP6Es", t:"工程數學第九章單元二：傅立葉級數(3/4)", len:"59 分鐘"},
+  {id:"_LHLyK0GkVI", t:"工程數學第九章單元二：傅立葉級數(4/4)", len:"1 小時"},
+  {id:"3_hI5MUH-Qc", t:"工程數學第九章單元三：複數型傅立葉級數與傅立葉積分(1/2)", len:"53 分鐘"},
+  {id:"jnXpw-EjS4A", t:"工程數學第九章單元三：複數型傅立葉級數與傅立葉積分(2/2)", len:"55 分鐘"},
+  {id:"k8gZPbdoMzQ", t:"工程數學第九章單元四：傅立葉轉換(1/4)", len:"39 分鐘"},
+  {id:"-vy9U2gZlQQ", t:"工程數學第九章單元四：傅立葉轉換(2/4)", len:"47 分鐘"},
+  {id:"mhAxWzJR81c", t:"工程數學第九章單元四：傅立葉轉換(3/4)", len:"1 小時 8 分鐘"},
+  {id:"Qv3XXNBNcGM", t:"工程數學第九章單元四：傅立葉轉換(4/4)", len:"55 分鐘"},
+  {id:"vKNloeiccCc", t:"工程數學第十章單元一：偏微分方程(PDE)概論(1/3)", len:"44 分鐘"},
+  {id:"KKE5SX4zhK4", t:"工程數學第十章單元一：偏微分方程(PDE)概論(2/3)", len:"39 分鐘"},
+  {id:"OhvnabkpCM4", t:"工程數學第十章單元一：偏微分方程(PDE)概論(3/3)", len:"33 分鐘"},
+  {id:"_u_WkVrcvwI", t:"工程數學第十章單元二：分離變數法求解二階PDE(1/6)", len:"30 分鐘"},
+  {id:"jweuCBmcPS4", t:"工程數學第十章單元二：分離變數法求解二階PDE(2/6)", len:"39 分鐘"},
+  {id:"TgyTcE185AY", t:"工程數學第十章單元二：分離變數法求解二階PDE(3/6)", len:"33 分鐘"},
+  {id:"bPuJ8HgqOVE", t:"工程數學第十章單元二：分離變數法求解二階PDE(4/6)", len:"30 分鐘"},
+  {id:"oFcW5rIH8Sw", t:"工程數學第十章單元二：分離變數法求解二階PDE(5/6)", len:"40 分鐘"},
+  {id:"ZidlnbMCzcE", t:"工程數學第十章單元二：分離變數法求解二階PDE(6/6)", len:"43 分鐘"},
+  {id:"4UM3aNScozE", t:"工程數學第十章單元三：非齊性偏微分方程求解(1/4)", len:"44 分鐘"},
+  {id:"WOqYzEgPf9I", t:"工程數學第十章單元三：非齊性偏微分方程求解(2/4)", len:"34 分鐘"},
+  {id:"57RSW8hTRzg", t:"工程數學第十章單元三：非齊性偏微分方程求解(3/4)", len:"41 分鐘"},
+  {id:"C3aSRa-FSdU", t:"工程數學第十章單元三：非齊性偏微分方程求解(4/4)", len:"32 分鐘"},
+  {id:"_XsJtbIRVIs", t:"工程數學第十章單元四：積分轉換求解PDE(1/2)", len:"38 分鐘"},
+  {id:"dvQXQmAonso", t:"工程數學第十章單元四：積分轉換求解PDE(2/2)", len:"35 分鐘"},
+  {id:"IkT9hCRoyvg", t:"工程數學第十一章單元一：複數的基本概念(1/2)", len:"1 小時 10 分鐘"},
+  {id:"FwXXvp4fjNc", t:"工程數學第十一章單元一：複數的基本概念(2/2)", len:"1 小時 8 分鐘"},
+  {id:"xYFOmQIqz8I", t:"工程數學第十一章單元二：複變函數(1/3)", len:"40 分鐘"},
+  {id:"3HtIIUdCpZU", t:"工程數學第十一章單元二：複變函數(2/3)", len:"43 分鐘"},
+  {id:"cDbUG9yUrKM", t:"工程數學第十一章單元二：複變函數(3/3)", len:"41 分鐘"},
+  {id:"F2l5zDENLU8", t:"工程數學第十一章單元三：複變函數的微分(1/2)", len:"55 分鐘"},
+  {id:"_DTxtY0ncx4", t:"工程數學第十一章單元三：複變函數的微分(2/2)", len:"1 小時"},
+  {id:"bWhjaymO2N4", t:"工程數學第十一章單元四：複變函數的積分(1/2)", len:"1 小時"},
+  {id:"cYrNfX4rBPM", t:"工程數學第十一章單元四：複變函數的積分(2/2)", len:"1 小時 4 分鐘"},
+  {id:"AYTFDOXQ__I", t:"工程數學第十一章單元五：泰勒展開式與洛朗展開式(1/2)", len:"40 分鐘"},
+  {id:"8cQ9BQjago0", t:"工程數學第十一章單元五：泰勒展開式與洛朗展開式(2/2)", len:"1 小時 7 分鐘"},
+  {id:"5MK2qorUiwY", t:"工程數學第十一章單元六：留數(殘值)定理(1/2)", len:"42 分鐘"},
+  {id:"Cs3qw2qi_oA", t:"工程數學第十一章單元六：留數(殘值)定理(2/2)", len:"1 小時 6 分鐘"},
+  {id:"KZBMNc5eQjs", t:"工程數學第十一章單元七：實變函數的定積分(1/4)", len:"38 分鐘"},
+  {id:"gO8RyDh0MlA", t:"工程數學第十一章單元七：實變函數的定積分(2/4)", len:"42 分鐘"},
+  {id:"NX3l7gCzSgM", t:"工程數學第十一章單元七：實變函數的定積分(3/4)", len:"36 分鐘"},
+  {id:"BhkR2_ESSII", t:"工程數學第十一章單元七：實變函數的定積分(4/4)", len:"43 分鐘"},
+  ],
+
+  electronics: [
+  {id:"kjCUeghJsWA", t:"2024_電子學(一)_01_1", len:"47 分鐘"},
+  {id:"IMOx9khM6fQ", t:"2024_電子學(一)_01_2", len:"48 分鐘"},
+  {id:"rpnsaRU7uaw", t:"2024_電子學(一)_01_3", len:"41 分鐘"},
+  {id:"M-96ia7YjmQ", t:"2024_電子學(一)_02_1", len:"33 分鐘"},
+  {id:"wp_tu1-H528", t:"2024_電子學(一)_02_2", len:"46 分鐘"},
+  {id:"1SpIuC64bIE", t:"2024_電子學(一)_02_3", len:"46 分鐘"},
+  {id:"t9vPhXsogsg", t:"2024_電子學(一)_03_1", len:"31 分鐘"},
+  {id:"od0qH4op1-0", t:"2024_電子學(一)_03_2", len:"49 分鐘"},
+  {id:"dz2r8jsWvUw", t:"2024_電子學(一)_03_3", len:"45 分鐘"},
+  {id:"PWWk_C2GBvY", t:"2024_電子學(一)_04_1", len:"44 分鐘"},
+  {id:"kb5-S7VYkwE", t:"2024_電子學(一)_04_2", len:"51 分鐘"},
+  {id:"RPAYbO0Vu9E", t:"2024_電子學(一)_04_3", len:"28 分鐘"},
+  {id:"1wXg8X5l-Zw", t:"2024_電子學(一)_04_4", len:"16 分鐘"},
+  {id:"rdMmgGWRA7o", t:"2024_電子學(一)_05_1", len:"45 分鐘"},
+  {id:"IPt9dl0r48o", t:"2024_電子學(一)05_2", len:"48 分鐘"},
+  {id:"h4UDzdGvf18", t:"2024_電子學(一)_05_3", len:"47 分鐘"},
+  {id:"tz3v9taMGHE", t:"2024_電子學(一)_06_1", len:"44 分鐘"},
+  {id:"hzvDPpEj5BI", t:"2024_電子學(一)_06_2", len:"50 分鐘"},
+  {id:"e-MQWFaGb68", t:"2024_電子學(一)_06-3", len:"37 分鐘"},
+  {id:"odx__Ko8cjg", t:"2024_電子學(一)_07_1", len:"45 分鐘"},
+  {id:"6iEboyy_TEc", t:"2024_電子學(一)-07-2", len:"43 分鐘"},
+  {id:"eXiurAdTgDk", t:"2024_電子學(一)-07-3", len:"43 分鐘"},
+  {id:"vBZEo04fsKc", t:"2024_電子學(一)-08-1", len:"41 分鐘"},
+  {id:"gJykgLjyZRk", t:"2024_電子學(一)-08-2", len:"39 分鐘"},
+  {id:"bLnjynZLE4M", t:"2024_電子學(一)-09-1", len:"44 分鐘"},
+  {id:"VRiRUYQ0JQc", t:"2024_電子學(一)-09-2", len:"42 分鐘"},
+  {id:"SsLw0UdIVOE", t:"2024_電子學(一)-09-3", len:"41 分鐘"},
+  {id:"ahbgM-RS8JQ", t:"2024_電子學(一)-10-1", len:"41 分鐘"},
+  {id:"jZKRPIkfRYw", t:"2024_電子學(一)-10-2", len:"43 分鐘"},
+  {id:"rEiyE6b7ZjU", t:"2024_電子學(一)_10_3", len:"33 分鐘"},
+  {id:"0nMoFqxKWrA", t:"2024_電子學(一)_11_1", len:"40 分鐘"},
+  {id:"d2M9cM-ma58", t:"2024_電子學(一)_11_2", len:"22 分鐘"},
+  ],
+
+  emag: [
+  {id:"NRN7DDaOncU", t:"課前複習-Gauss’s Law", len:"48 分鐘"},
+  {id:"ZUCmBdC6uds", t:"課前複習-Coulomb’s Law", len:"11 分鐘 40 秒"},
+  {id:"gf_3GfrwRuk", t:"CH1 Introduction & CH2 Vector Analysis & 1.1 Scalar and vector", len:"7 分鐘"},
+  {id:"Z_8r4_jAo6g", t:"2.4 Orthogonal Coordinate System", len:"45 分鐘"},
+  {id:"sFENWVuTaZM", t:"2.5 Integrals Containing Vector Functions", len:"1 小時 30 分鐘"},
+  {id:"cPfXiVAu90Q", t:"2.6 Gradient of a Scalar Field", len:"1 小時 30 分鐘"},
+  {id:"3SXQorYWMQ4", t:"2.7 Divergence of a Vector Field & 2.8 Divergence Theorem (Gauss's Theorem)", len:"1 小時 32 分鐘"},
+  {id:"BHN_wWke0Y0", t:"2.9 Curl of a Vector Field A", len:"1 小時 34 分鐘"},
+  {id:"dmuYvwb4Yks", t:"2.10 Stoke's Theorem", len:"1 小時 31 分鐘"},
+  {id:"04ON0u9geH0", t:"3.2 Postulates of Electrostatics in Free Space", len:"48 分鐘"},
+  {id:"gZyweBUMB2Q", t:"3.3 Coulomb's Law", len:"1 小時 31 分鐘"},
+  {id:"Xzk_5cLXDxE", t:"3.4 Gauss's Law and Applications", len:"1 小時 31 分鐘"},
+  {id:"NXtHMADedmE", t:"3.5 Electric Potential", len:"44 分鐘"},
+  {id:"BuCEZ0RVDCg", t:"3.6 Conductors in Static Electric Field", len:"1 小時 34 分鐘"},
+  {id:"0KgB9fsCGLs", t:"3.7 Dielectrics in Static Elecrtric Field", len:"43 分鐘"},
+  {id:"Nt0wL1Ba0r0", t:"3.8 Electric Flux Density and Dielectric Constant & 3.9", len:"1 小時 34 分鐘"},
+  {id:"hXJ4Cqf5ANs", t:"3.10 Capacitance and Capacitor", len:"43 分鐘"},
+  {id:"-l1udVa1neA", t:"3.11 Electrostatic Energy and Force (see pp. 172-173 of Ulaby)", len:"40 分鐘"},
+  {id:"TG4SbkR9pGU", t:"CH4 Solution of Electrostatic Problems & 4.2 Poisson's and Laplace's Equations", len:"51 分鐘"},
+  {id:"QbAlAKuTIP4", t:"4.4 Method of Images & 4.4.2 Line charge and parallel conducting cylinders", len:"1 小時 42 分鐘"},
+  {id:"txuUzxmfCiw", t:"5.2 Current Density and Ohm's Law & 5.4 Continuity Equation", len:"56 分鐘"},
+  {id:"JIXzQY5EjQc", t:"5.4 Continuity Equation & 5.5 Power Dissipation & 6.1 Introduction & 6.2", len:"1 小時 41 分鐘"},
+  {id:"FrC9m2yloak", t:"6.3 Vector Potential & 6.4 Biot-Savart Law & 6.5 Magnetic Dipole", len:"1 小時 43 分鐘"},
+  {id:"wj-6aluSmO8", t:"6.5 Magnetic Dipole", len:"52 分鐘"},
+  {id:"qiv_azCUEP4", t:"6.6 Magnetization", len:"1 小時 40 分鐘"},
+  {id:"_DFfxG8GAfw", t:"6.8 Magnetic Circuits", len:"51 分鐘"},
+  {id:"xfrPJs9v89M", t:"6.11 Inductance and inductors", len:"1 小時 11 分鐘"},
+  {id:"zgUQGiHyUfg", t:"6.12 Magnetic Energy & 6.12.1 Magnetic energy in terms of eld quantity", len:"36 分鐘"},
+  {id:"fEfVNiE53z8", t:"6.13 補充", len:"1 小時 39 分鐘"},
+  ],
+};
+
+const SUBJECTS = {
+  circuits: {
+    key:"circuits", name:"電路學二", teacher:"陳晏笙教授（國立臺北科技大學 OCW）",
+    playlist:"https://youtube.com/playlist?list=PL68D2uCy1WTMtp1m5TEJbKEt4kvlA4jLP",
+    textbookNote:"練習題對照：Hayt《Engineering Circuit Analysis》（依主題比對章節，老師課程本身為自編講義）",
+    chapterFn: (item,i)=>circuitsChapter(i+1),
+  },
+  electronics: {
+    key:"electronics", name:"電子學一", teacher:"馬誠佑老師（國立中山大學 OCW）",
+    playlist:"https://youtube.com/playlist?list=PLEA2WbGejokVSxG1R244JUwHrAWOyDLC0",
+    textbookNote:"練習題對照：Sedra & Smith《Microelectronic Circuits》",
+    chapterFn: (item)=>electronicsChapter(item.t),
+  },
+  math: {
+    key:"math", name:"工程數學", teacher:"姚賀騰教授",
+    playlist:"https://youtube.com/playlist?list=PLEw7l19rPmyTm6BAfssyB5xjRrk77tRM5",
+    textbookNote:"練習題對照：姚賀騰《工程數學》（全華圖書，與課程章節一致）",
+    chapterFn: (item)=>mathChapter(item.t),
+  },
+  emag: {
+    key:"emag", name:"電磁學一", teacher:"邱一老師（國立陽明交通大學 OCW）",
+    playlist:"https://youtube.com/playlist?list=PLj6E8qlqmkFsUxjf-ju-d0uTeKjzjEVLt",
+    textbookNote:"練習題對照：Ulaby《Fundamentals of Applied Electromagnetics》",
+    chapterFn: (item)=>emagChapter(item.t),
+  },
+};
+
+const BUILTIN_KEYS = Object.keys(SUBJECTS);
+
+/* ---------- 狀態管理 ---------- */
+
+const STORAGE_KEY = "studyProgress_v1";
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  }catch(e){}
+  return {};
+}
+let state = loadState();
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const hint = document.getElementById("saveHint");
+  const now = new Date();
+  hint.textContent = "已自動儲存 " + now.toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"});
+}
+
+function getUnitState(subjectKey, id){
+  if (!state[subjectKey]) state[subjectKey] = {};
+  if (!state[subjectKey][id]) state[subjectKey][id] = {watched:false, practiced:false};
+  return state[subjectKey][id];
+}
+
+function toggleUnit(subjectKey, id, field, checked){
+  const s = getUnitState(subjectKey, id);
+  s[field] = checked;
+  saveState();
+  renderOverview();
+  updateSubjectBars(subjectKey);
+  updateUnitRowStyle(subjectKey, id);
+  renderExamBox(subjectKey);
+  renderExamCalendar();
+}
+
+/* ---------- 渲染 ---------- */
+
+function subjectStats(key){
+  const items = RAW[key];
+  const total = items.length;
+  let watched=0, practiced=0;
+  items.forEach(it=>{
+    const s = (state[key] && state[key][it.id]) || {};
+    if (s.watched) watched++;
+    if (s.practiced) practiced++;
+  });
+  return {total, watched, practiced};
+}
+
+function renderOverview(){
+  const el = document.getElementById("overview");
+  el.innerHTML = "";
+  Object.values(SUBJECTS).forEach(subj=>{
+    const {total,watched,practiced} = subjectStats(subj.key);
+    const pct = total? Math.round(watched/total*100) : 0;
+    const card = document.createElement("div");
+    card.className = "ov-card";
+    card.innerHTML = `
+      <div class="name"><span>${subj.name}</span><span class="pct">${pct}%</span></div>
+      <div class="stat">觀看 ${watched}/${total}．練習 ${practiced}/${total}</div>
+      <div class="bar"><span style="width:${pct}%"></span></div>
+    `;
+    el.appendChild(card);
+  });
+}
+
+function updateSubjectBars(key){
+  const {total,watched,practiced} = subjectStats(key);
+  const wPct = total? Math.round(watched/total*100) : 0;
+  const pPct = total? Math.round(practiced/total*100) : 0;
+  const wBar = document.querySelector(`#head-${key} .watch-bar > span`);
+  const pBar = document.querySelector(`#head-${key} .practice-bar > span`);
+  const wLbl = document.querySelector(`#head-${key} .watch-lbl`);
+  const pLbl = document.querySelector(`#head-${key} .practice-lbl`);
+  if (wBar) wBar.style.width = wPct+"%";
+  if (pBar) pBar.style.width = pPct+"%";
+  if (wLbl) wLbl.textContent = `觀看進度 ${watched}/${total}（${wPct}%）`;
+  if (pLbl) pLbl.textContent = `練習題完成 ${practiced}/${total}（${pPct}%）`;
+}
+
+function updateUnitRowStyle(key,id){
+  const row = document.querySelector(`.unit[data-key="${key}"][data-id="${id}"]`);
+  if (!row) return;
+  const s = getUnitState(key,id);
+  row.classList.toggle("done", !!(s.watched && s.practiced));
+}
+
+function buildTabs(){
+  const tabsEl = document.getElementById("tabs");
+  const panelsEl = document.getElementById("panels");
+  tabsEl.innerHTML = "";
+  panelsEl.innerHTML = "";
+  let first = true;
+  Object.values(SUBJECTS).forEach(subj=>{
+    const btn = document.createElement("button");
+    btn.className = "tab-btn" + (first? " active":"");
+    btn.textContent = subj.name;
+    btn.onclick = ()=>switchTab(subj.key);
+    btn.id = "tabbtn-"+subj.key;
+    tabsEl.appendChild(btn);
+
+    const panel = document.createElement("div");
+    panel.className = "panel" + (first? " active":"");
+    panel.id = "panel-"+subj.key;
+
+    const {total,watched,practiced} = subjectStats(subj.key);
+    const wPct = total? Math.round(watched/total*100):0;
+    const pPct = total? Math.round(practiced/total*100):0;
+
+    panel.innerHTML = `
+      <div class="subject-head" id="head-${subj.key}">
+        <div class="headtop" id="headtop-${subj.key}"></div>
+        <div class="dualbars">
+          <div class="dualbar">
+            <div class="lbl watch-lbl">觀看進度 ${watched}/${total}（${wPct}%）</div>
+            <div class="bar watch-bar"><span style="width:${wPct}%"></span></div>
+          </div>
+          <div class="dualbar">
+            <div class="lbl practice-lbl">練習題完成 ${practiced}/${total}（${pPct}%）</div>
+            <div class="bar practice-bar"><span style="width:${pPct}%"></span></div>
+          </div>
+        </div>
+        <div class="studystats" id="studystats-${subj.key}"></div>
+        <div class="exambox" id="exambox-${subj.key}"></div>
+      </div>
+      <div class="unit-list" id="list-${subj.key}"></div>
+    `;
+    panelsEl.appendChild(panel);
+    renderHeadTop(subj.key);
+
+    const list = panel.querySelector(`#list-${subj.key}`);
+    RAW[subj.key].forEach((item,i)=>{
+      const s = getUnitState(subj.key, item.id);
+      const chip = subj.chapterFn(item,i);
+      const row = document.createElement("div");
+      row.className = "unit" + (s.watched && s.practiced ? " done":"");
+      row.dataset.key = subj.key;
+      row.dataset.id = item.id;
+      row.innerHTML = `
+        <div class="idx">#${i+1}</div>
+        <div class="info">
+          <div class="title">${escapeHtml(item.t)}</div>
+          <div class="sub">
+            <span class="len">⏱ ${item.len}</span>
+            ${chip? `<span class="chip">${escapeHtml(chip)}</span>` : ""}
+          </div>
+        </div>
+        <a class="watch" href="https://www.youtube.com/watch?v=${item.id}" target="_blank" rel="noopener">▶ 觀看</a>
+        <label><input type="checkbox" ${s.watched?"checked":""} onchange="toggleUnit('${subj.key}','${item.id}','watched',this.checked)"> 已觀看</label>
+        <label><input type="checkbox" ${s.practiced?"checked":""} onchange="toggleUnit('${subj.key}','${item.id}','practiced',this.checked)"> 練習題完成</label>
+      `;
+      list.appendChild(row);
+    });
+
+    first = false;
+  });
+
+  Object.keys(SUBJECTS).forEach(renderExamBox);
+  Object.keys(SUBJECTS).forEach(renderStudyStats);
+  renderExamCalendar();
+  renderMonthCalendar();
+  populateTimerSubjectSelect();
+}
+
+function switchTab(key){
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById("tabbtn-"+key).classList.add("active");
+  document.getElementById("panel-"+key).classList.add("active");
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+/* ---------- 自訂科目：儲存與還原 ---------- */
+
+const CUSTOM_SUBJECTS_KEY = "customSubjects_v1";
+
+function loadCustomSubjectsList(){
+  try{
+    const raw = localStorage.getItem(CUSTOM_SUBJECTS_KEY);
+    if (raw) return JSON.parse(raw);
+  }catch(e){}
+  return [];
+}
+
+function saveCustomSubjectsList(list){
+  localStorage.setItem(CUSTOM_SUBJECTS_KEY, JSON.stringify(list));
+}
+
+function registerCustomSubject(entry){
+  SUBJECTS[entry.key] = {
+    key: entry.key, name: entry.name, teacher: entry.teacher,
+    playlist: entry.playlist,
+    textbookNote: entry.textbookNote || "（自訂科目，未設定教材對照）",
+    chapterFn: ()=>"", custom: true,
+  };
+  RAW[entry.key] = entry.items;
+}
+
+function loadAllCustomSubjectsIntoData(){
+  loadCustomSubjectsList().forEach(registerCustomSubject);
+}
+
+/* ---------- 科目名稱／教師覆寫、刪除（含預設四科） ---------- */
+
+const SUBJECT_OVERRIDES_KEY = "subjectOverrides_v1";
+const DELETED_BUILTINS_KEY = "deletedBuiltins_v1";
+
+function loadSubjectOverrides(){
+  try{
+    const raw = localStorage.getItem(SUBJECT_OVERRIDES_KEY);
+    if (raw) return JSON.parse(raw);
+  }catch(e){}
+  return {};
+}
+let subjectOverrides = loadSubjectOverrides();
+function saveSubjectOverrides(){
+  localStorage.setItem(SUBJECT_OVERRIDES_KEY, JSON.stringify(subjectOverrides));
+}
+
+function loadDeletedBuiltins(){
+  try{
+    const raw = localStorage.getItem(DELETED_BUILTINS_KEY);
+    if (raw) return JSON.parse(raw);
+  }catch(e){}
+  return [];
+}
+let deletedBuiltins = loadDeletedBuiltins();
+function saveDeletedBuiltins(){
+  localStorage.setItem(DELETED_BUILTINS_KEY, JSON.stringify(deletedBuiltins));
+}
+
+function applyDeletedBuiltins(){
+  deletedBuiltins.forEach(key=>{
+    if (BUILTIN_KEYS.includes(key)){
+      delete SUBJECTS[key];
+      delete RAW[key];
+    }
+  });
+}
+
+function applySubjectOverridesToData(){
+  Object.keys(subjectOverrides).forEach(key=>{
+    if (!SUBJECTS[key]) return;
+    const ov = subjectOverrides[key];
+    if (ov.name) SUBJECTS[key].name = ov.name;
+    if (ov.teacher !== undefined) SUBJECTS[key].teacher = ov.teacher;
+  });
+}
+
+function restoreDeletedBuiltins(){
+  if (deletedBuiltins.length===0){ alert("目前沒有被刪除的預設科目。"); return; }
+  if (!confirm("要還原所有已刪除的預設科目嗎？（電路學二／電子學一／工程數學／電磁學一）")) return;
+  deletedBuiltins = [];
+  saveDeletedBuiltins();
+  location.reload();
+}
+
+let editingSubjectKey = null;
+
+function renderHeadTop(key){
+  const el = document.getElementById("headtop-"+key);
+  const subj = SUBJECTS[key];
+  if (!el || !subj) return;
+
+  if (editingSubjectKey === key){
+    el.innerHTML = `
+      <div class="editrow">
+        <input type="text" id="editName-${key}" value="${escapeHtml(subj.name)}" placeholder="科目名稱">
+        <input type="text" id="editTeacher-${key}" value="${escapeHtml(subj.teacher||"")}" placeholder="授課老師">
+      </div>
+      <div class="editactions">
+        <button class="btn primary-sm" onclick="saveEditSubject('${key}')">儲存</button>
+        <button class="btn" onclick="cancelEditSubject('${key}')">取消</button>
+      </div>
+    `;
+  } else {
+    el.innerHTML = `
+      <button class="del-btn" onclick="deleteSubject('${key}')">刪除科目</button>
+      <button class="edit-btn" onclick="startEditSubject('${key}')">編輯</button>
+      <h2>${escapeHtml(subj.name)}</h2>
+      <div class="meta">${escapeHtml(subj.teacher||"")}　|　<a href="${subj.playlist}" target="_blank" rel="noopener">播放清單</a><br>${escapeHtml(subj.textbookNote||"")}</div>
+    `;
+  }
+}
+
+function startEditSubject(key){
+  editingSubjectKey = key;
+  renderHeadTop(key);
+}
+
+function cancelEditSubject(key){
+  editingSubjectKey = null;
+  renderHeadTop(key);
+}
+
+function saveEditSubject(key){
+  const nameEl = document.getElementById("editName-"+key);
+  const teacherEl = document.getElementById("editTeacher-"+key);
+  const name = nameEl.value.trim();
+  const teacher = teacherEl.value.trim();
+  if (!name){ alert("科目名稱不可為空"); return; }
+  SUBJECTS[key].name = name;
+  SUBJECTS[key].teacher = teacher;
+  subjectOverrides[key] = {name, teacher};
+  saveSubjectOverrides();
+  editingSubjectKey = null;
+  buildTabs();
+  renderOverview();
+  switchTab(key);
+}
+
+function deleteSubject(key){
+  const subj = SUBJECTS[key];
+  if (!subj) return;
+  if (!confirm(`確定要刪除「${subj.name}」嗎？其觀看、練習題、考試與讀書記錄都會一併移除，此動作無法復原。`)) return;
+
+  if (subj.custom){
+    const list = loadCustomSubjectsList().filter(s=>s.key!==key);
+    saveCustomSubjectsList(list);
+  } else {
+    if (!deletedBuiltins.includes(key)) deletedBuiltins.push(key);
+    saveDeletedBuiltins();
+  }
+
+  delete SUBJECTS[key];
+  delete RAW[key];
+  delete state[key];
+  delete examDates[key];
+  delete subjectOverrides[key];
+  saveSubjectOverrides();
+  cleanupStudyLogsForSubject(key);
+  saveState();
+  saveExamDates();
+  buildTabs();
+  renderOverview();
+  renderExamCalendar();
+  renderMonthCalendar();
+  const firstKey = Object.keys(SUBJECTS)[0];
+  if (firstKey) switchTab(firstKey);
+}
+
+/* ---------- YouTube API 金鑰 ---------- */
+
+const API_KEY_STORAGE = "ytApiKey_v1";
+
+function getApiKey(){
+  return localStorage.getItem(API_KEY_STORAGE) || "";
+}
+
+function saveApiKeyFromInput(){
+  const v = document.getElementById("ytApiKeyInput").value.trim();
+  localStorage.setItem(API_KEY_STORAGE, v);
+  updateApiKeyStatus();
+}
+
+function updateApiKeyStatus(){
+  const el = document.getElementById("apiKeyStatus");
+  const key = getApiKey();
+  const input = document.getElementById("ytApiKeyInput");
+  if (input && key) input.value = key;
+  if (el) el.textContent = key ? "✅ 已設定金鑰" : "⚪ 尚未設定金鑰";
+}
+
+/* ---------- YouTube 播放清單自動分集 ---------- */
+
+function extractPlaylistId(url){
+  const m = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+function parseISODuration(iso){
+  const m = iso.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
+  if (!m) return 0;
+  const h = parseInt(m[1]||0,10), mi = parseInt(m[2]||0,10), s = parseInt(m[3]||0,10);
+  return h*3600 + mi*60 + s;
+}
+
+function formatDurationSeconds(sec){
+  const h = Math.floor(sec/3600);
+  const m = Math.floor((sec%3600)/60);
+  const s = sec%60;
+  if (h>0) return m>0 ? `${h} 小時 ${m} 分鐘` : `${h} 小時`;
+  if (m>0) return `${m} 分鐘`;
+  return `${s} 秒`;
+}
+
+function lenStrToMinutes(str){
+  if (!str) return 0;
+  let h=0, m=0;
+  const mh = str.match(/(\d+)\s*小時/); if (mh) h = parseInt(mh[1],10);
+  const mm = str.match(/(\d+)\s*分鐘/); if (mm) m = parseInt(mm[1],10);
+  return h*60+m;
+}
+
+async function fetchPlaylistItems(apiKey, playlistId){
+  let items = [];
+  let pageToken = "";
+  let guard = 0;
+  do{
+    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(apiKey)}${pageToken?"&pageToken="+pageToken:""}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || "YouTube API 錯誤");
+    (data.items||[]).forEach(it=>{
+      const title = it.snippet && it.snippet.title;
+      const vid = it.contentDetails && it.contentDetails.videoId;
+      if (!vid || title==="Deleted video" || title==="Private video") return;
+      items.push({id:vid, t:title});
+    });
+    pageToken = data.nextPageToken || "";
+    guard++;
+  } while(pageToken && guard<40);
+
+  for (let i=0; i<items.length; i+=50){
+    const batch = items.slice(i, i+50);
+    const ids = batch.map(b=>b.id).join(",");
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${encodeURIComponent(ids)}&key=${encodeURIComponent(apiKey)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || "YouTube API 錯誤");
+    const durMap = {};
+    (data.items||[]).forEach(v=>{ durMap[v.id] = v.contentDetails.duration; });
+    batch.forEach(b=>{
+      const iso = durMap[b.id];
+      b.len = iso ? formatDurationSeconds(parseISODuration(iso)) : "";
+    });
+  }
+  return items;
+}
+
+async function submitNewSubject(){
+  const nameEl = document.getElementById("newSubjName");
+  const teacherEl = document.getElementById("newSubjTeacher");
+  const urlEl = document.getElementById("newSubjUrl");
+  const noteEl = document.getElementById("newSubjNote");
+  const hint = document.getElementById("addSubjHint");
+  const name = nameEl.value.trim();
+  const teacher = teacherEl.value.trim();
+  const url = urlEl.value.trim();
+  const note = noteEl.value.trim();
+  const apiKey = getApiKey();
+
+  if (!name || !url){ alert("請至少填寫科目名稱與播放清單網址"); return; }
+  if (!apiKey){ alert("請先在上方輸入並儲存 YouTube API 金鑰"); return; }
+  const playlistId = extractPlaylistId(url);
+  if (!playlistId){ alert("無法從網址中解析播放清單 ID，請確認貼上的是完整播放清單連結（需包含 list= 參數）"); return; }
+
+  const btn = document.getElementById("newSubjSubmitBtn");
+  btn.disabled = true; btn.textContent = "抓取中…";
+  hint.textContent = "正在向 YouTube 取得播放清單內容，請稍候…";
+  try{
+    const items = await fetchPlaylistItems(apiKey, playlistId);
+    if (items.length===0){
+      alert("這個播放清單沒有抓到任何影片，請確認播放清單為公開／不公開（unlisted）狀態，並確認網址正確");
+      return;
+    }
+    const key = "custom_" + Date.now();
+    const entry = {
+      key, name, teacher: teacher || "（自訂）", playlist: url,
+      textbookNote: note || "（自訂科目，未設定教材對照）",
+      items,
+    };
+    registerCustomSubject(entry);
+    const list = loadCustomSubjectsList();
+    list.push(entry);
+    saveCustomSubjectsList(list);
+
+    nameEl.value = ""; teacherEl.value = ""; urlEl.value = ""; noteEl.value = "";
+    hint.textContent = `已成功建立「${name}」，共 ${items.length} 部影片。`;
+    buildTabs();
+    renderOverview();
+    renderExamCalendar();
+    switchTab(key);
+  }catch(e){
+    alert("抓取失敗：" + e.message + "\n請確認 API 金鑰正確、播放清單為公開狀態，且今日 API 額度未用盡。");
+    hint.textContent = "";
+  }finally{
+    btn.disabled = false; btn.textContent = "＋ 自動抓取並建立科目";
+  }
+}
+
+/* ---------- 考試日期（可自訂多場） ---------- */
+
+const EXAM_KEY = "examDates_v1";
+
+function loadExamDates(){
+  try{
+    const raw = localStorage.getItem(EXAM_KEY);
+    if (raw){
+      const data = JSON.parse(raw);
+      // 舊格式 {mid,final} 自動搬遷成陣列格式
+      Object.keys(data).forEach(k=>{
+        if (!Array.isArray(data[k])){
+          const old = data[k] || {};
+          const arr = [];
+          if (old.mid) arr.push({id:"mid_"+k, label:"期中考", date:old.mid});
+          if (old.final) arr.push({id:"final_"+k, label:"期末考", date:old.final});
+          data[k] = arr;
+        }
+      });
+      return data;
+    }
+  }catch(e){}
+  return {};
+}
+
+let examDates = loadExamDates();
+
+function saveExamDates(){
+  localStorage.setItem(EXAM_KEY, JSON.stringify(examDates));
+}
+
+function addExam(key){
+  if (!examDates[key]) examDates[key] = [];
+  const id = "exam_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+  examDates[key].push({id, label:"", date:""});
+  saveExamDates();
+  renderExamBox(key);
+  renderExamCalendar();
+  renderMonthCalendar();
+}
+
+function removeExam(key, examId){
+  if (!examDates[key]) return;
+  examDates[key] = examDates[key].filter(e=>e.id!==examId);
+  saveExamDates();
+  renderExamBox(key);
+  renderExamCalendar();
+  renderMonthCalendar();
+}
+
+function setExamLabel(key, examId, label){
+  const ex = (examDates[key]||[]).find(e=>e.id===examId);
+  if (!ex) return;
+  ex.label = label;
+  saveExamDates();
+  renderExamCalendar();
+  renderMonthCalendar();
+}
+
+function setExamDateNew(key, examId, date){
+  const ex = (examDates[key]||[]).find(e=>e.id===examId);
+  if (!ex) return;
+  ex.date = date;
+  saveExamDates();
+  renderExamBox(key);
+  renderExamCalendar();
+  renderMonthCalendar();
+}
+
+function renderExamBox(key){
+  const el = document.getElementById("exambox-"+key);
+  if (!el || !RAW[key]) return;
+  const exams = examDates[key] || [];
+  const {total, watched} = subjectStats(key);
+  const remainCount = total - watched;
+  const remainMinutes = RAW[key].reduce((sum,it)=>{
+    const s = (state[key] && state[key][it.id]) || {};
+    return sum + (s.watched ? 0 : lenStrToMinutes(it.len));
+  }, 0);
+
+  const rowsHtml = exams.map(ex=>{
+    let info = "";
+    if (ex.date){
+      const target = new Date(ex.date+"T23:59:59");
+      const now = new Date();
+      const diffDays = Math.ceil((target-now)/86400000);
+      if (diffDays < 0){
+        info = `<span class="examinfo overdue">已超過</span>`;
+      } else {
+        const totalHrs = (remainMinutes/60).toFixed(1);
+        const dailyMin = diffDays>0 ? Math.ceil(remainMinutes/diffDays) : remainMinutes;
+        info = `<span class="examinfo">剩 <b>${diffDays}</b> 天｜未看 <b>${remainCount}</b> 支（約 ${totalHrs} 小時）｜每天需看 <b>${dailyMin}</b> 分鐘</span>`;
+      }
+    }
+    return `<div class="examrow">
+      <input type="text" class="examlabel" value="${escapeHtml(ex.label||"")}" placeholder="考試名稱（如：期中考、小考一）" onchange="setExamLabel('${key}','${ex.id}',this.value)">
+      <input type="date" class="examdate" value="${ex.date||""}" onchange="setExamDateNew('${key}','${ex.id}',this.value)">
+      ${info}
+      <button class="exam-del" onclick="removeExam('${key}','${ex.id}')" title="刪除這場考試">✕</button>
+    </div>`;
+  }).join("");
+
+  el.innerHTML = rowsHtml + `<button class="btn" onclick="addExam('${key}')">＋ 新增考試</button>`;
+}
+
+function renderExamCalendar(){
+  const el = document.getElementById("examCalendar");
+  if (!el) return;
+  const rows = [];
+  Object.keys(SUBJECTS).forEach(key=>{
+    if (!RAW[key]) return;
+    const exams = examDates[key] || [];
+    const remainMinutes = RAW[key].reduce((sum,it)=>{
+      const s = (state[key] && state[key][it.id]) || {};
+      return sum + (s.watched ? 0 : lenStrToMinutes(it.len));
+    }, 0);
+    exams.forEach(ex=>{
+      if (!ex.date) return;
+      const target = new Date(ex.date+"T23:59:59");
+      const now = new Date();
+      const diffDays = Math.ceil((target-now)/86400000);
+      rows.push({subject: SUBJECTS[key].name, label: ex.label || "考試", val: ex.date, diffDays, remainMinutes});
+    });
+  });
+
+  if (rows.length===0){
+    el.innerHTML = `<p class="hint" style="margin:0;">尚未設定任何考試日期，請到各科目卡片下方新增考試並設定日期，這裡就會自動列出所有考試的倒數與所需進度。</p>`;
+    return;
+  }
+
+  rows.sort((a,b)=> new Date(a.val) - new Date(b.val));
+  el.innerHTML = rows.map(r=>{
+    const overdue = r.diffDays < 0;
+    const dailyMin = (!overdue && r.diffDays>0) ? Math.ceil(r.remainMinutes/r.diffDays) : r.remainMinutes;
+    const info = overdue
+      ? "已超過"
+      : `剩 ${r.diffDays} 天｜未看約 ${(r.remainMinutes/60).toFixed(1)} 小時${r.diffDays>0 ? `｜每天需看 ${dailyMin} 分鐘` : ""}`;
+    return `<div class="calrow ${overdue?"overdue":""}">
+      <div class="caldate">${escapeHtml(r.val)}</div>
+      <div class="calsubject">${escapeHtml(r.subject)} · ${escapeHtml(r.label)}</div>
+      <div class="calinfo">${info}</div>
+    </div>`;
+  }).join("");
+}
+
+/* ---------- iOS 風格方形月曆 ---------- */
+
+let calView = (function(){ const d=new Date(); return {y:d.getFullYear(), m:d.getMonth()}; })();
+let selectedCalDay = null;
+
+function pad2(n){ return String(n).padStart(2,"0"); }
+
+function calPrevMonth(){
+  calView.m--;
+  if (calView.m<0){ calView.m=11; calView.y--; }
+  renderMonthCalendar();
+}
+function calNextMonth(){
+  calView.m++;
+  if (calView.m>11){ calView.m=0; calView.y++; }
+  renderMonthCalendar();
+}
+
+function renderMonthCalendar(){
+  const grid = document.getElementById("monthCalGrid");
+  const title = document.getElementById("monthCalTitle");
+  if (!grid || !title) return;
+  const {y,m} = calView;
+  title.textContent = `${y}年${m+1}月`;
+
+  const examMap = {};
+  Object.keys(examDates).forEach(key=>{
+    if (!SUBJECTS[key]) return;
+    (examDates[key]||[]).forEach(ex=>{
+      if (!ex.date) return;
+      (examMap[ex.date] = examMap[ex.date]||[]).push({subject:SUBJECTS[key].name, label:ex.label||"考試"});
+    });
+  });
+  const studyMap = {};
+  loadStudyLog().forEach(l=>{
+    studyMap[l.date] = (studyMap[l.date]||0) + l.minutes;
+  });
+
+  const first = new Date(y, m, 1);
+  const startOffset = first.getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const daysInPrevMonth = new Date(y, m, 0).getDate();
+  const todayStr = new Date().toISOString().slice(0,10);
+
+  let cells = [];
+  for (let i=0;i<startOffset;i++){
+    cells.push({dayNum: daysInPrevMonth - startOffset + 1 + i, muted:true, dateStr:null});
+  }
+  for (let d=1; d<=daysInMonth; d++){
+    cells.push({dayNum:d, muted:false, dateStr:`${y}-${pad2(m+1)}-${pad2(d)}`});
+  }
+  let nextDay = 1;
+  while (cells.length % 7 !== 0){
+    cells.push({dayNum: nextDay++, muted:true, dateStr:null});
+  }
+
+  const dowHtml = ["日","一","二","三","四","五","六"].map(d=>`<div class="monthcal-dow">${d}</div>`).join("");
+  const daysHtml = cells.map(c=>{
+    if (c.muted){
+      return `<div class="monthcal-day muted"><span class="daynum">${c.dayNum}</span></div>`;
+    }
+    const isToday = c.dateStr === todayStr;
+    const isSelected = c.dateStr === selectedCalDay;
+    const hasExam = !!examMap[c.dateStr];
+    const hasStudy = !!studyMap[c.dateStr];
+    const dots = (hasExam? `<span class="dot exam"></span>`:"") + (hasStudy? `<span class="dot study"></span>`:"");
+    return `<div class="monthcal-day ${isToday?"today":""} ${isSelected?"selected":""}" onclick="selectCalDay('${c.dateStr}')">
+      <span class="daynum">${c.dayNum}</span>
+      <span class="dots">${dots}</span>
+    </div>`;
+  }).join("");
+
+  grid.innerHTML = dowHtml + daysHtml;
+  renderCalDayDetail();
+}
+
+function selectCalDay(dateStr){
+  if (!dateStr) return;
+  selectedCalDay = (selectedCalDay === dateStr) ? null : dateStr;
+  renderMonthCalendar();
+}
+
+function renderCalDayDetail(){
+  const el = document.getElementById("calDayDetail");
+  if (!el) return;
+  if (!selectedCalDay){
+    el.innerHTML = `<p class="empty">點選日期查看當天的考試與讀書記錄</p>`;
+    return;
+  }
+  const exams = [];
+  Object.keys(examDates).forEach(key=>{
+    if (!SUBJECTS[key]) return;
+    (examDates[key]||[]).forEach(ex=>{
+      if (ex.date===selectedCalDay) exams.push(`${SUBJECTS[key].name} · ${ex.label||"考試"}`);
+    });
+  });
+  const studies = loadStudyLog().filter(l=>l.date===selectedCalDay);
+
+  let html = `<div class="calday-title">${escapeHtml(selectedCalDay)}</div>`;
+  if (exams.length===0 && studies.length===0){
+    html += `<p class="empty">這天沒有安排考試或讀書記錄</p>`;
+  } else {
+    exams.forEach(e=> html += `<div class="item"><span>📌 ${escapeHtml(e)}</span></div>`);
+    studies.forEach(s=> html += `<div class="item"><span>⏱ ${escapeHtml(SUBJECTS[s.subjectKey]?.name || s.subjectKey)}</span><span>${s.minutes} 分鐘</span></div>`);
+  }
+  el.innerHTML = html;
+}
+
+/* ---------- 讀書時間記錄與計時器 ---------- */
+
+const STUDY_LOG_KEY = "studyLog_v1";
+
+function loadStudyLog(){
+  try{
+    const raw = localStorage.getItem(STUDY_LOG_KEY);
+    if (raw) return JSON.parse(raw);
+  }catch(e){}
+  return [];
+}
+function saveStudyLog(log){
+  localStorage.setItem(STUDY_LOG_KEY, JSON.stringify(log));
+}
+function cleanupStudyLogsForSubject(key){
+  saveStudyLog(loadStudyLog().filter(l=>l.subjectKey!==key));
+}
+
+function populateTimerSubjectSelect(){
+  const sel = document.getElementById("timerSubjectSelect");
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = Object.values(SUBJECTS).map(s=>`<option value="${s.key}">${escapeHtml(s.name)}</option>`).join("");
+  if (prev && SUBJECTS[prev]) sel.value = prev;
+}
+
+let timerState = { running:false, startTs:null, elapsedMs:0, subjectKey:null };
+let timerInterval = null;
+
+function updateTimerDisplay(){
+  const ms = timerState.running ? (Date.now()-timerState.startTs) : timerState.elapsedMs;
+  const totalSec = Math.max(0, Math.floor(ms/1000));
+  const h = String(Math.floor(totalSec/3600)).padStart(2,"0");
+  const m = String(Math.floor((totalSec%3600)/60)).padStart(2,"0");
+  const s = String(totalSec%60).padStart(2,"0");
+  const el = document.getElementById("timerDisplay");
+  if (el) el.textContent = `${h}:${m}:${s}`;
+}
+
+function updateTimerUI(){
+  const btn = document.getElementById("timerStartPauseBtn");
+  const sel = document.getElementById("timerSubjectSelect");
+  if (btn) btn.textContent = timerState.running ? "⏸ 暫停" : (timerState.elapsedMs>0 ? "▶ 繼續" : "▶ 開始");
+  if (sel) sel.disabled = timerState.running || timerState.elapsedMs>0;
+}
+
+function timerStartPause(){
+  if (!timerState.subjectKey){
+    const sel = document.getElementById("timerSubjectSelect");
+    if (!sel || !sel.value){ alert("請先選擇要讀書的科目"); return; }
+    timerState.subjectKey = sel.value;
+  }
+  if (timerState.running){
+    timerState.elapsedMs = Date.now() - timerState.startTs;
+    timerState.running = false;
+    clearInterval(timerInterval);
+  } else {
+    timerState.startTs = Date.now() - timerState.elapsedMs;
+    timerState.running = true;
+    timerInterval = setInterval(updateTimerDisplay, 1000);
+  }
+  updateTimerUI();
+  updateTimerDisplay();
+}
+
+function timerReset(){
+  clearInterval(timerInterval);
+  timerState = { running:false, startTs:null, elapsedMs:0, subjectKey:null };
+  updateTimerDisplay();
+  updateTimerUI();
+}
+
+function timerCancel(){
+  if (timerState.elapsedMs===0 && !timerState.running){ return; }
+  if (!confirm("確定要放棄這次計時，不儲存記錄嗎？")) return;
+  timerReset();
+}
+
+function timerFinish(){
+  if (timerState.running){
+    timerState.elapsedMs = Date.now() - timerState.startTs;
+    clearInterval(timerInterval);
+    timerState.running = false;
+  }
+  const minutes = Math.round(timerState.elapsedMs/60000);
+  if (!timerState.subjectKey || minutes < 1){
+    alert("讀書時間不足 1 分鐘，未記錄");
+    timerReset();
+    return;
+  }
+  const key = timerState.subjectKey;
+  const dateStr = new Date().toISOString().slice(0,10);
+  const log = loadStudyLog();
+  log.push({id:"study_"+Date.now(), subjectKey:key, date:dateStr, minutes});
+  saveStudyLog(log);
+  alert(`已記錄：${SUBJECTS[key]?.name || key} 讀書 ${minutes} 分鐘`);
+  timerReset();
+  renderStudyStats(key);
+  renderMonthCalendar();
+}
+
+function renderStudyStats(key){
+  const el = document.getElementById("studystats-"+key);
+  if (!el) return;
+  const log = loadStudyLog().filter(l=>l.subjectKey===key);
+  const totalMin = log.reduce((s,l)=>s+l.minutes,0);
+  const h = Math.floor(totalMin/60), m = totalMin%60;
+  const recent = log.slice(-5).reverse();
+  el.innerHTML = `<div class="statline">⏱ 累計讀書時數：<b>${h} 小時 ${m} 分鐘</b>（共 ${log.length} 次記錄）</div>` +
+    (recent.length ? `<div class="studyrecent">${recent.map(r=>`<span class="studychip">${escapeHtml(r.date)} · ${r.minutes} 分</span>`).join("")}</div>` : "");
+}
+
+/* ---------- 匯出 / 匯入 / 重設 ---------- */
+
+function exportData(){
+  const bundle = {
+    state, examDates, customSubjects: loadCustomSubjectsList(),
+    studyLog: loadStudyLog(), subjectOverrides, deletedBuiltins,
+  };
+  const blob = new Blob([JSON.stringify(bundle,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `讀書進度備份_${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(evt){
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if (data && (data.state || data.examDates || data.customSubjects || data.studyLog)){
+        state = data.state || {};
+        examDates = data.examDates || {};
+        saveCustomSubjectsList(data.customSubjects || []);
+        if (data.studyLog) saveStudyLog(data.studyLog);
+        if (data.subjectOverrides){ subjectOverrides = data.subjectOverrides; saveSubjectOverrides(); }
+        if (data.deletedBuiltins){ deletedBuiltins = data.deletedBuiltins; saveDeletedBuiltins(); }
+      } else {
+        state = data;
+      }
+      saveState();
+      saveExamDates();
+      location.reload();
+    }catch(e){
+      alert("匯入失敗，檔案格式不正確");
+    }
+  };
+  reader.readAsText(file);
+  evt.target.value = "";
+}
+
+function resetAll(){
+  if (!confirm("確定要清除所有科目的觀看與練習題進度嗎？此動作無法復原。")) return;
+  state = {};
+  saveState();
+  location.reload();
+}
+
+/* ---------- 初始化 ---------- */
+
+loadAllCustomSubjectsIntoData();
+applyDeletedBuiltins();
+applySubjectOverridesToData();
+updateApiKeyStatus();
+buildTabs();
+renderOverview();
+timerReset();
+</script>
+</body>
+</html>
