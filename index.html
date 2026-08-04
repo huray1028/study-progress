@@ -35,6 +35,13 @@
     --track:#edece9; --danger:#eb5757; --chip:#eeeeec;
     --hover:rgba(55,53,47,0.06);
   }
+  :root[data-theme="matcha"]{
+    --bg:#f9fbf9; --page:#f0f4f0; --card:#ffffff; --text:#2e3d30; --sub:#6b806c;
+    --border:rgba(76,175,80,0.15); --border-strong:rgba(76,175,80,0.3);
+    --accent:#4caf50; --accent2:#2e7d32;
+    --track:#e0efe1; --danger:#e57373; --chip:#e8f5e9;
+    --hover:rgba(76,175,80,0.08);
+  }
   * { box-sizing: border-box; }
   body{
     margin:0; padding:0; background:var(--page); color:var(--text);
@@ -42,7 +49,12 @@
     line-height:1.6; -webkit-font-smoothing:antialiased;
   }
   .wrap{ max-width:900px; margin:0 auto; padding:64px 32px 80px; }
-  h1{ font-size:2.1rem; font-weight:700; letter-spacing:-0.02em; margin:0 0 6px; }
+  .titlerow{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
+  h1{ font-size:2.1rem; font-weight:700; letter-spacing:-0.02em; margin:0; }
+  #themeSelect{
+    padding:7px 10px; border-radius:4px; border:1px solid var(--border);
+    background:var(--card); color:var(--text); font-size:0.82rem; cursor:pointer; font-family:inherit;
+  }
   .lead{ color:var(--sub); font-size:0.92rem; margin:0 0 32px; }
 
   .overview{
@@ -59,7 +71,13 @@
   .ov-card .stat{ color:var(--sub); font-size:0.76rem; margin-top:3px; }
 
   .bar{ height:6px; border-radius:3px; background:var(--track); overflow:hidden; margin-top:9px; }
-  .bar > span{ display:block; height:100%; background:var(--accent); border-radius:3px; transition:width .25s; }
+  .bar > span{ display:block; height:100%; background:var(--accent); border-radius:3px; transition:width .25s; position:relative; overflow:hidden; }
+  .bar > span::after{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%);
+    background-size:200% 100%; animation:shine 2.5s linear infinite;
+  }
+  @keyframes shine{ 0%{ background-position:200% 0; } 100%{ background-position:-200% 0; } }
 
   .tabs{ display:flex; gap:4px; flex-wrap:wrap; margin-bottom:20px; border-bottom:1px solid var(--border); }
   .tab-btn{
@@ -97,6 +115,8 @@
   .unit:first-child{ border-top:none; }
   .unit:hover{ background:var(--hover); }
   .unit.done{ opacity:0.55; }
+  @keyframes doneBounce{ 0%{ transform:scale(1); } 40%{ transform:scale(1.015); } 100%{ transform:scale(1); } }
+  .unit.just-done{ animation:doneBounce .3s ease; }
   .unit .idx{ font-size:0.74rem; color:var(--sub); min-width:26px; font-variant-numeric:tabular-nums; }
   .unit .info{ flex:1; min-width:220px; }
   .unit .title{ font-size:0.9rem; }
@@ -111,16 +131,32 @@
     border:1px solid var(--border); padding:4px 10px; border-radius:4px; transition:background .1s;
   }
   .unit .watch:hover{ background:var(--hover); }
-  .unit label{ display:flex; align-items:center; gap:6px; font-size:0.78rem; cursor:pointer; white-space:nowrap; color:var(--sub); }
+  .unit .batch-btn{ font-size:0.72rem; padding:4px 8px; flex-shrink:0; }
+  .unit label{
+    display:flex; align-items:center; gap:6px; font-size:0.78rem; cursor:pointer;
+    white-space:nowrap; color:var(--sub); padding:6px 10px; border-radius:6px; transition:background .12s;
+  }
+  .unit label:hover{ background:var(--hover); }
   .unit input[type=checkbox]{
     appearance:none; -webkit-appearance:none; width:16px; height:16px;
     border-radius:3px; border:1.5px solid var(--border-strong); background:var(--card);
     cursor:pointer; position:relative; margin:0; flex-shrink:0;
   }
   .unit input[type=checkbox]:checked{ background:var(--accent); border-color:var(--accent); }
+  @keyframes checkPop{ 0%{ transform:rotate(45deg) scale(0); } 60%{ transform:rotate(45deg) scale(1.3); } 100%{ transform:rotate(45deg) scale(1); } }
   .unit input[type=checkbox]:checked::after{
     content:""; position:absolute; left:4px; top:0px; width:4px; height:8px;
     border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg);
+    animation:checkPop .25s ease-out;
+  }
+
+  .confetti-piece{
+    position:fixed; top:-10px; width:8px; height:8px; pointer-events:none; z-index:9999;
+    animation:confettiFall 1.4s ease-in forwards;
+  }
+  @keyframes confettiFall{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(100vh) rotate(600deg); opacity:0; }
   }
 
   .toolbar{
@@ -224,6 +260,11 @@
   }
   .topstat-label{ font-size:0.8rem; color:var(--sub); margin-bottom:6px; }
   .topstat-value{ font-size:1.4rem; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .chart-card svg{ display:block; }
+  .chart-card .chart-empty{ color:var(--sub); font-size:0.78rem; margin:0; }
+  .chart-legend{ margin-top:6px; display:flex; flex-wrap:wrap; }
+  .chart-legend-item{ display:inline-flex; align-items:center; gap:4px; margin-right:8px; font-size:0.7rem; color:var(--sub); }
+  .chart-legend-dot{ width:8px; height:8px; border-radius:2px; display:inline-block; }
 
   .collapsible-head{
     display:flex; align-items:center; justify-content:space-between; cursor:pointer;
@@ -245,6 +286,8 @@
     background:var(--card); border:1px solid var(--border); border-radius:6px;
     padding:18px 20px; margin-bottom:18px;
   }
+  .timermode{ display:flex; gap:6px; margin-bottom:14px; }
+  .timermode .btn.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
   .timerrow{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:12px; }
   .timerrow select{
     padding:8px 10px; border-radius:4px; border:1px solid var(--border);
@@ -303,13 +346,39 @@
   .calrow .calsubject{ min-width:150px; font-weight:600; }
   .calrow .calinfo{ color:var(--sub); }
 </style>
+<script>
+(function(){
+  try{
+    var pref = localStorage.getItem("themePref_v1");
+    if (pref && pref !== "auto") document.documentElement.dataset.theme = pref;
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
 <div class="wrap">
-  <h1>📚 讀書進度追蹤</h1>
+  <div class="titlerow">
+    <h1>📚 讀書進度追蹤</h1>
+    <select id="themeSelect" onchange="setTheme(this.value)">
+      <option value="auto">🌓 自動</option>
+      <option value="light">☀️ 淺色</option>
+      <option value="dark">🌙 深色</option>
+      <option value="matcha">🍵 抹茶綠</option>
+    </select>
+  </div>
   <p class="lead">電子學一・電路學二・工程數學・電磁學 — 觀看進度與練習題勾選（資料儲存於本機瀏覽器）</p>
 
   <div class="topstats" id="topStats"></div>
+  <div class="topstats">
+    <div class="topstat-card chart-card">
+      <div class="topstat-label">📊 近 7 天讀書時間</div>
+      <div id="weeklyBarChart"></div>
+    </div>
+    <div class="topstat-card chart-card">
+      <div class="topstat-label">🥧 各科讀書時間佔比</div>
+      <div id="subjectPieChart"></div>
+    </div>
+  </div>
 
   <div class="overview" id="overview"></div>
 
@@ -319,6 +388,10 @@
     </h3>
     <div class="collapsible-body">
       <div class="timerbox">
+        <div class="timermode">
+          <button class="btn active" id="modeStopwatchBtn" onclick="setTimerMode('stopwatch')">⏱ 正計時</button>
+          <button class="btn" id="modePomodoroBtn" onclick="setTimerMode('pomodoro')">🍅 番茄鐘 25 分</button>
+        </div>
         <div class="timerrow">
           <select id="timerSubjectSelect"></select>
           <div class="timerdisplay" id="timerDisplay">00:00:00</div>
@@ -771,6 +844,7 @@ function getUnitState(subjectKey, id){
 }
 
 function toggleUnit(subjectKey, id, field, checked){
+  const beforePct = watchedPct(subjectKey);
   const s = getUnitState(subjectKey, id);
   s[field] = checked;
   saveState();
@@ -779,6 +853,29 @@ function toggleUnit(subjectKey, id, field, checked){
   updateUnitRowStyle(subjectKey, id);
   renderExamBox(subjectKey);
   renderExamCalendar();
+  if (field === "watched"){
+    const afterPct = watchedPct(subjectKey);
+    if (beforePct < 1 && afterPct >= 1) fireConfetti();
+  }
+}
+
+function watchedPct(key){
+  const {total, watched} = subjectStats(key);
+  return total ? watched/total : 0;
+}
+
+function fireConfetti(){
+  const colors = ["#2383e2","#0f7b6c","#eb5757","#e2a03f","#9b6fd6"];
+  for (let i=0;i<40;i++){
+    const p = document.createElement("div");
+    p.className = "confetti-piece";
+    p.style.left = Math.random()*100 + "vw";
+    p.style.background = colors[i%colors.length];
+    p.style.animationDelay = (Math.random()*0.3)+"s";
+    p.style.borderRadius = Math.random()<0.5 ? "50%" : "2px";
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 1800);
+  }
 }
 
 /* ---------- 渲染 ---------- */
@@ -830,7 +927,42 @@ function updateUnitRowStyle(key,id){
   const row = document.querySelector(`.unit[data-key="${key}"][data-id="${id}"]`);
   if (!row) return;
   const s = getUnitState(key,id);
-  row.classList.toggle("done", !!(s.watched && s.practiced));
+  const nowDone = !!(s.watched && s.practiced);
+  if (nowDone && !row.classList.contains("done")){
+    row.classList.add("just-done");
+    setTimeout(()=>row.classList.remove("just-done"), 300);
+  }
+  row.classList.toggle("done", nowDone);
+}
+
+function markDoneUpTo(subjectKey, uptoIndex){
+  const items = RAW[subjectKey];
+  if (!items) return;
+  if (!confirm(`確定要將 #1 ~ #${uptoIndex+1} 全部標記為「已觀看」與「練習題完成」嗎？`)) return;
+  const beforePct = watchedPct(subjectKey);
+  for (let i=0; i<=uptoIndex; i++){
+    const it = items[i];
+    const s = getUnitState(subjectKey, it.id);
+    s.watched = true; s.practiced = true;
+    const row = document.querySelector(`.unit[data-key="${subjectKey}"][data-id="${it.id}"]`);
+    if (row){
+      row.querySelectorAll("input[type=checkbox]").forEach(cb=>cb.checked=true);
+      if (!row.classList.contains("done")){
+        row.style.animationDelay = (i*15)+"ms";
+        row.classList.add("just-done");
+        setTimeout(()=>{ row.classList.remove("just-done"); row.style.animationDelay=""; }, 300+i*15);
+      }
+      row.classList.add("done");
+    }
+  }
+  saveState();
+  renderOverview();
+  updateSubjectBars(subjectKey);
+  renderExamBox(subjectKey);
+  renderExamCalendar();
+  renderMonthCalendar();
+  const afterPct = watchedPct(subjectKey);
+  if (beforePct < 1 && afterPct >= 1) fireConfetti();
 }
 
 function buildTabs(){
@@ -897,6 +1029,7 @@ function buildTabs(){
           </div>
         </div>
         <a class="watch" href="https://www.youtube.com/watch?v=${item.id}" target="_blank" rel="noopener">▶ 觀看</a>
+        <button class="btn batch-btn" onclick="markDoneUpTo('${subj.key}', ${i})" title="將 #1 到 #${i+1} 全部標記為已完成">✔ 補標至此</button>
         <label><input type="checkbox" ${s.watched?"checked":""} onchange="toggleUnit('${subj.key}','${item.id}','watched',this.checked)"> 已觀看</label>
         <label><input type="checkbox" ${s.practiced?"checked":""} onchange="toggleUnit('${subj.key}','${item.id}','practiced',this.checked)"> 練習題完成</label>
       `;
@@ -1532,11 +1665,35 @@ function populateTimerSubjectSelect(){
   if (prev && SUBJECTS[prev]) sel.value = prev;
 }
 
-let timerState = { running:false, startTs:null, elapsedMs:0, subjectKey:null };
+let timerState = { running:false, startTs:null, elapsedMs:0, subjectKey:null, mode:"stopwatch" };
 let timerInterval = null;
+let audioCtx = null;
+const POMODORO_MS = 25*60*1000;
+
+function setTimerMode(mode){
+  if (timerState.running || timerState.elapsedMs>0){
+    alert("請先結束或重設目前的計時再切換模式");
+    return;
+  }
+  timerState.mode = mode;
+  updateTimerModeUI();
+  updateTimerDisplay();
+}
+
+function updateTimerModeUI(){
+  const swBtn = document.getElementById("modeStopwatchBtn");
+  const pdBtn = document.getElementById("modePomodoroBtn");
+  if (swBtn) swBtn.classList.toggle("active", timerState.mode==="stopwatch");
+  if (pdBtn) pdBtn.classList.toggle("active", timerState.mode==="pomodoro");
+}
 
 function updateTimerDisplay(){
-  const ms = timerState.running ? (Date.now()-timerState.startTs) : timerState.elapsedMs;
+  const elapsed = timerState.running ? (Date.now()-timerState.startTs) : timerState.elapsedMs;
+  if (timerState.mode === "pomodoro" && timerState.running && elapsed >= POMODORO_MS){
+    pomodoroComplete();
+    return;
+  }
+  const ms = timerState.mode === "pomodoro" ? Math.max(0, POMODORO_MS - elapsed) : elapsed;
   const totalSec = Math.max(0, Math.floor(ms/1000));
   const h = String(Math.floor(totalSec/3600)).padStart(2,"0");
   const m = String(Math.floor((totalSec%3600)/60)).padStart(2,"0");
@@ -1552,12 +1709,36 @@ function updateTimerUI(){
   if (sel) sel.disabled = timerState.running || timerState.elapsedMs>0;
 }
 
+function playBeep(){
+  try{
+    if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine"; osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+0.5);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime+0.55);
+  }catch(e){ /* 靜默失敗，不阻斷計時器流程 */ }
+}
+
+function pomodoroComplete(){
+  clearInterval(timerInterval);
+  timerState.running = false;
+  timerState.elapsedMs = POMODORO_MS;
+  playBeep();
+  timerFinish();
+}
+
 function timerStartPause(){
   if (!timerState.subjectKey){
     const sel = document.getElementById("timerSubjectSelect");
     if (!sel || !sel.value){ alert("請先選擇要讀書的科目"); return; }
     timerState.subjectKey = sel.value;
   }
+  try{ if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
   if (timerState.running){
     timerState.elapsedMs = Date.now() - timerState.startTs;
     timerState.running = false;
@@ -1573,9 +1754,11 @@ function timerStartPause(){
 
 function timerReset(){
   clearInterval(timerInterval);
-  timerState = { running:false, startTs:null, elapsedMs:0, subjectKey:null };
+  const mode = timerState.mode;
+  timerState = { running:false, startTs:null, elapsedMs:0, subjectKey:null, mode };
   updateTimerDisplay();
   updateTimerUI();
+  updateTimerModeUI();
 }
 
 function timerFinish(){
@@ -1639,6 +1822,67 @@ function renderTopStudyStats(){
       <div class="topstat-value">${fmt(totalMin)}</div>
     </div>
   `;
+  renderWeeklyBarChart();
+  renderSubjectPieChart();
+}
+
+const CHART_PALETTE = ["#2383e2","#0f7b6c","#e2a03f","#9b6fd6","#e07a5f","#5aa9a3"];
+
+function renderWeeklyBarChart(){
+  const el = document.getElementById("weeklyBarChart");
+  if (!el) return;
+  const log = loadStudyLog();
+  const days = [];
+  for (let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = d.toISOString().slice(0,10);
+    days.push({ds, label:"日一二三四五六"[d.getDay()], min: log.filter(l=>l.date===ds).reduce((s,l)=>s+l.minutes,0)});
+  }
+  const max = Math.max(1, ...days.map(d=>d.min));
+  if (days.every(d=>d.min===0)){
+    el.innerHTML = `<p class="chart-empty">尚無讀書記錄</p>`;
+    return;
+  }
+  const bw=28, gap=8, chartH=60;
+  const bars = days.map((d,i)=>{
+    const bh = Math.round((d.min/max)*chartH);
+    const x = i*(bw+gap);
+    return `<rect x="${x}" y="${70-bh}" width="${bw}" height="${bh}" rx="3" fill="var(--accent)"/>
+            <text x="${x+bw/2}" y="84" text-anchor="middle" font-size="9" fill="var(--sub)">${d.label}</text>`;
+  }).join("");
+  el.innerHTML = `<svg viewBox="0 0 ${7*(bw+gap)-gap} 90" width="100%" height="90">${bars}</svg>`;
+}
+
+function renderSubjectPieChart(){
+  const el = document.getElementById("subjectPieChart");
+  if (!el) return;
+  const log = loadStudyLog();
+  const byKey = {};
+  log.forEach(l=>{ byKey[l.subjectKey] = (byKey[l.subjectKey]||0) + l.minutes; });
+  const entries = Object.keys(SUBJECTS).map(k=>({key:k,name:SUBJECTS[k].name,min:byKey[k]||0})).filter(e=>e.min>0);
+  if (!entries.length){
+    el.innerHTML = `<p class="chart-empty">尚無讀書記錄</p>`;
+    return;
+  }
+  const total = entries.reduce((s,e)=>s+e.min,0);
+  let angle = -90;
+  const r=40, cx=50, cy=50;
+  let paths = "";
+  entries.forEach((e,i)=>{
+    const frac = e.min/total, sweep = frac*360;
+    const x1 = cx + r*Math.cos(angle*Math.PI/180), y1 = cy + r*Math.sin(angle*Math.PI/180);
+    const end = angle+sweep;
+    const x2 = cx + r*Math.cos(end*Math.PI/180), y2 = cy + r*Math.sin(end*Math.PI/180);
+    const large = sweep>180 ? 1 : 0;
+    if (entries.length===1){
+      paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${CHART_PALETTE[0]}"/>`;
+    } else {
+      paths += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z" fill="${CHART_PALETTE[i%CHART_PALETTE.length]}"/>`;
+    }
+    angle = end;
+  });
+  const legend = entries.map((e,i)=>`<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${CHART_PALETTE[i%CHART_PALETTE.length]}"></span>${escapeHtml(e.name)}</span>`).join("");
+  el.innerHTML = `<svg viewBox="0 0 100 100" width="90" height="90">${paths}</svg><div class="chart-legend">${legend}</div>`;
 }
 
 /* ---------- 匯出 / 匯入 / 重設 ---------- */
@@ -1693,6 +1937,27 @@ function resetAll(){
   location.reload();
 }
 
+/* ---------- 主題切換 ---------- */
+
+const THEME_KEY = "themePref_v1";
+
+function applyTheme(pref){
+  if (pref && pref !== "auto") document.documentElement.dataset.theme = pref;
+  else delete document.documentElement.dataset.theme;
+}
+
+function setTheme(pref){
+  localStorage.setItem(THEME_KEY, pref);
+  applyTheme(pref);
+}
+
+function initTheme(){
+  const pref = localStorage.getItem(THEME_KEY) || "auto";
+  applyTheme(pref);
+  const sel = document.getElementById("themeSelect");
+  if (sel) sel.value = pref;
+}
+
 /* ---------- 初始化 ---------- */
 
 loadAllCustomSubjectsIntoData();
@@ -1702,6 +1967,7 @@ updateApiKeyStatus();
 buildTabs();
 renderOverview();
 renderTopStudyStats();
+initTheme();
 timerReset();
 </script>
 </body>
