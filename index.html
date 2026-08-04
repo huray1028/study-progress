@@ -365,24 +365,24 @@
 <body>
 <div class="wrap">
   <div class="titlerow">
-    <h1>📚 讀書進度追蹤</h1>
+    <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block;vertical-align:middle;margin-right:8px;"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 14H8v-2h8v2zm0-3H8V9h8v4z"/></svg>讀書進度追縱</h1>
     <select id="themeSelect" onchange="setTheme(this.value)">
-      <option value="auto">🌓 自動</option>
-      <option value="light">☀️ 淺色</option>
-      <option value="dark">🌙 深色</option>
-      <option value="matcha">🍵 抹茶綠</option>
+      <option value="auto">◐ 自動</option>
+      <option value="light">☀ 淺色</option>
+      <option value="dark">☾ 深色</option>
+      <option value="matcha">✓ 抹茶綠</option>
     </select>
   </div>
-  <p class="lead">電子學一・電路學二・工程數學・電磁學 — 觀看進度與練習題勾選（資料儲存於本機瀏覽器）</p>
+  <p class="lead">彈性追蹤任何科目進度 — 觀看進度與練習題勾選（資料儲存於本機瀏覽器）</p>
 
   <div class="topstats" id="topStats"></div>
   <div class="topstats">
     <div class="topstat-card chart-card">
-      <div class="topstat-label">📊 近 7 天讀書時間</div>
+      <div class="topstat-label">[📈] 近 7 天讀書時間</div>
       <div id="weeklyBarChart"></div>
     </div>
     <div class="topstat-card chart-card">
-      <div class="topstat-label">🥧 各科讀書時間佔比</div>
+      <div class="topstat-label">◐ 各科讀書時間佔比</div>
       <div id="subjectPieChart"></div>
     </div>
   </div>
@@ -391,21 +391,21 @@
 
   <div class="collapsible" id="section-timer">
     <h3 class="collapsible-head" onclick="toggleSection('section-timer')">
-      <span>⏱ 讀書計時器</span><span class="chev">▶</span>
+      <span>⏰ 讀書計時器</span><span class="chev">›</span>
     </h3>
     <div class="collapsible-body">
       <div class="timerbox">
         <div class="timermode">
-          <button class="btn active" id="modeStopwatchBtn" onclick="setTimerMode('stopwatch')">⏱ 正計時</button>
-          <button class="btn" id="modePomodoroBtn" onclick="setTimerMode('pomodoro')">🍅 番茄鐘 25 分</button>
+          <button class="btn active" id="modeStopwatchBtn" onclick="setTimerMode('stopwatch')">⏰ 正計時</button>
+          <button class="btn" id="modePomodoroBtn" onclick="setTimerMode('pomodoro')">● 番茄鐘 25 分</button>
         </div>
         <div class="timerrow">
           <select id="timerSubjectSelect"></select>
           <div class="timerdisplay" id="timerDisplay">00:00:00</div>
         </div>
         <div class="timeractions">
-          <button class="btn primary-sm" id="timerStartPauseBtn" onclick="timerStartPause()">▶ 開始</button>
-          <button class="btn" onclick="timerFinish()">✔ 結束並記錄</button>
+          <button class="btn primary-sm" id="timerStartPauseBtn" onclick="timerStartPause()">› 開始</button>
+          <button class="btn" onclick="timerFinish()">✓ 結束並記錄</button>
         </div>
       </div>
     </div>
@@ -413,7 +413,7 @@
 
   <div class="collapsible" id="section-calendar">
     <h3 class="collapsible-head" onclick="toggleSection('section-calendar')">
-      <span>📅 行事曆</span><span class="chev">▶</span>
+      <span>📋 行事曆</span><span class="chev">›</span>
     </h3>
     <div class="collapsible-body">
       <div class="calbox">
@@ -424,7 +424,7 @@
         </div>
         <div class="monthcal-grid" id="monthCalGrid"></div>
         <div class="calday-detail" id="calDayDetail"></div>
-        <h3 style="margin-top:20px;">📅 近期考試倒數</h3>
+        <h3 style="margin-top:20px;">📋 近期考試倒數</h3>
         <div id="examCalendar"></div>
       </div>
     </div>
@@ -432,7 +432,7 @@
 
   <div class="collapsible" id="section-add">
     <h3 class="collapsible-head" onclick="toggleSection('section-add')">
-      <span>➕ 新增追蹤科目</span><span class="chev">▶</span>
+      <span>[+] 新增追蹤科目</span><span class="chev">›</span>
     </h3>
     <div class="collapsible-body">
     <div class="addbox">
@@ -1011,7 +1011,7 @@ function buildTabs(){
         <div class="exambox" id="exambox-${subj.key}"></div>
       </div>
       <button class="unitlist-toggle" onclick="toggleUnitList('${subj.key}')">
-        <span id="unitToggleLabel-${subj.key}">▶ 顯示課程清單（${total} 部影片）</span>
+        <span id="unitToggleLabel-${subj.key}">› 顯示課程清單（${total} 部影片）</span>
       </button>
       <div class="unit-list" id="list-${subj.key}" style="display:none;"></div>
     `;
@@ -1031,12 +1031,12 @@ function buildTabs(){
         <div class="info">
           <div class="title">${escapeHtml(item.t)}</div>
           <div class="sub">
-            <span class="len">⏱ ${item.len}</span>
+            <span class="len">⏰ ${item.len}</span>
             ${chip? `<span class="chip">${escapeHtml(chip)}</span>` : ""}
           </div>
         </div>
-        <a class="watch" href="https://www.youtube.com/watch?v=${item.id}" target="_blank" rel="noopener">▶ 觀看</a>
-        <button class="btn batch-btn" onclick="markDoneUpTo('${subj.key}', ${i})" title="將 #1 到 #${i+1} 全部標記為已完成">✔ 補標至此</button>
+        <a class="watch" href="https://www.youtube.com/watch?v=${item.id}" target="_blank" rel="noopener">› 觀看</a>
+        <button class="btn batch-btn" onclick="markDoneUpTo('${subj.key}', ${i})" title="將 #1 到 #${i+1} 全部標記為已完成">✓ 補標至此</button>
         <label><input type="checkbox" ${s.watched?"checked":""} onchange="toggleUnit('${subj.key}','${item.id}','watched',this.checked)"> 已觀看</label>
         <label><input type="checkbox" ${s.practiced?"checked":""} onchange="toggleUnit('${subj.key}','${item.id}','practiced',this.checked)"> 練習題完成</label>
       `;
@@ -1073,7 +1073,7 @@ function toggleUnitList(key){
   const total = RAW[key] ? RAW[key].length : 0;
   if (isOpen){
     list.style.display = "none";
-    label.textContent = `▶ 顯示課程清單（${total} 部影片）`;
+    label.textContent = `› 顯示課程清單（${total} 部影片）`;
   } else {
     list.style.display = "flex";
     label.textContent = `▼ 隱藏課程清單`;
@@ -1658,7 +1658,7 @@ function renderCalDayDetail(){
     html += `<p class="empty">這天沒有安排考試或讀書記錄</p>`;
   } else {
     exams.forEach(e=> html += `<div class="item"><span>📌 ${escapeHtml(e)}</span></div>`);
-    studies.forEach(s=> html += `<div class="item"><span>⏱ ${escapeHtml(SUBJECTS[s.subjectKey]?.name || s.subjectKey)}</span><span>${s.minutes} 分鐘</span></div>`);
+    studies.forEach(s=> html += `<div class="item"><span>⏰ ${escapeHtml(SUBJECTS[s.subjectKey]?.name || s.subjectKey)}</span><span>${s.minutes} 分鐘</span></div>`);
   }
   el.innerHTML = html;
 }
@@ -1729,7 +1729,7 @@ function updateTimerDisplay(){
 function updateTimerUI(){
   const btn = document.getElementById("timerStartPauseBtn");
   const sel = document.getElementById("timerSubjectSelect");
-  if (btn) btn.textContent = timerState.running ? "⏸ 暫停" : (timerState.elapsedMs>0 ? "▶ 繼續" : "▶ 開始");
+  if (btn) btn.textContent = timerState.running ? "⏸ 暫停" : (timerState.elapsedMs>0 ? "› 繼續" : "› 開始");
   if (sel) sel.disabled = timerState.running || timerState.elapsedMs>0;
 }
 
@@ -1816,7 +1816,7 @@ function renderStudyStats(key){
   const totalMin = log.reduce((s,l)=>s+l.minutes,0);
   const h = Math.floor(totalMin/60), m = totalMin%60;
   const recent = log.slice(-5).reverse();
-  el.innerHTML = `<div class="statline">⏱ 累計讀書時數：<b>${h} 小時 ${m} 分鐘</b>（共 ${log.length} 次記錄）</div>` +
+  el.innerHTML = `<div class="statline">⏰ 累計讀書時數：<b>${h} 小時 ${m} 分鐘</b>（共 ${log.length} 次記錄）</div>` +
     (recent.length ? `<div class="studyrecent">${recent.map(r=>`<span class="studychip">${escapeHtml(r.date)} · ${r.minutes} 分<button class="chip-del" onclick="deleteStudyLogEntry('${r.id}','${key}')" title="刪除這筆記錄">✕</button></span>`).join("")}</div>` : "");
 }
 
@@ -1838,11 +1838,11 @@ function renderTopStudyStats(){
   const fmt = (min)=>{ const h=Math.floor(min/60), m=min%60; return `${h} 小時 ${m} 分鐘`; };
   el.innerHTML = `
     <div class="topstat-card">
-      <div class="topstat-label">📖 今天讀書時間</div>
+      <div class="topstat-label">📗 今天讀書時間</div>
       <div class="topstat-value">${fmt(todayMin)}</div>
     </div>
     <div class="topstat-card">
-      <div class="topstat-label">🏆 累計總讀書時數</div>
+      <div class="topstat-label">🥇 累計總讀書時數</div>
       <div class="topstat-value">${fmt(totalMin)}</div>
     </div>
   `;
