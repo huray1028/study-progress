@@ -204,15 +204,47 @@
   .studystats .statline b{ color:var(--accent2); }
   .studyrecent{ display:flex; gap:6px; flex-wrap:wrap; }
   .studychip{
+    display:inline-flex; align-items:center; gap:5px;
     font-size:0.7rem; background:var(--chip); color:var(--sub);
-    padding:2px 8px; border-radius:4px;
+    padding:2px 6px 2px 8px; border-radius:4px;
   }
+  .chip-del{
+    background:none; border:none; color:var(--sub); cursor:pointer; font-size:0.7rem;
+    padding:0; line-height:1;
+  }
+  .chip-del:hover{ color:var(--danger); }
+
+  .topstats{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:12px; margin-bottom:24px;
+  }
+  .topstat-card{
+    background:var(--card); border:1px solid var(--border); border-radius:6px;
+    padding:16px 18px;
+  }
+  .topstat-label{ font-size:0.8rem; color:var(--sub); margin-bottom:6px; }
+  .topstat-value{ font-size:1.4rem; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
+
+  .collapsible-head{
+    display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+    margin:0; font-size:1rem; font-weight:700; user-select:none;
+  }
+  .collapsible-head .chev{ color:var(--sub); font-size:0.75rem; transition:transform .15s; }
+  .collapsible.open .collapsible-head .chev{ transform:rotate(90deg); }
+  .collapsible-body{ display:none; margin-top:14px; }
+  .collapsible.open .collapsible-body{ display:block; }
+
+  .unitlist-toggle{
+    display:flex; align-items:center; gap:6px; background:none; border:1px solid var(--border);
+    color:var(--sub); font-size:0.8rem; padding:7px 12px; border-radius:4px; cursor:pointer;
+    width:100%; margin-bottom:12px; font-family:inherit;
+  }
+  .unitlist-toggle:hover{ background:var(--hover); color:var(--text); }
 
   .timerbox{
     background:var(--card); border:1px solid var(--border); border-radius:6px;
     padding:18px 20px; margin-bottom:18px;
   }
-  .timerbox h3{ margin:0 0 12px; font-size:1rem; font-weight:700; }
   .timerrow{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:12px; }
   .timerrow select{
     padding:8px 10px; border-radius:4px; border:1px solid var(--border);
@@ -251,10 +283,10 @@
   }
   .monthcal-day.today .daynum{ background:var(--accent); color:#fff; font-weight:700; }
   .monthcal-day.selected{ border-color:var(--accent); }
-  .monthcal-day .dots{ display:flex; gap:3px; height:5px; }
-  .monthcal-day .dot{ width:5px; height:5px; border-radius:50%; }
+  .monthcal-day .dots{ display:flex; align-items:center; gap:3px; height:9px; }
+  .monthcal-day .dot{ width:5px; height:5px; border-radius:50%; flex-shrink:0; }
   .monthcal-day .dot.exam{ background:var(--danger); }
-  .monthcal-day .dot.study{ background:var(--accent2); }
+  .monthcal-day .studymin{ font-size:0.58rem; font-weight:700; color:var(--accent2); line-height:1; }
 
   .calday-detail{ margin-top:14px; padding-top:12px; border-top:1px solid var(--border); font-size:0.84rem; }
   .calday-detail .calday-title{ font-weight:700; margin-bottom:6px; }
@@ -277,35 +309,53 @@
   <h1>📚 讀書進度追蹤</h1>
   <p class="lead">電子學一・電路學二・工程數學・電磁學 — 觀看進度與練習題勾選（資料儲存於本機瀏覽器）</p>
 
+  <div class="topstats" id="topStats"></div>
+
   <div class="overview" id="overview"></div>
 
-  <div class="timerbox">
-    <h3>⏱ 讀書計時器</h3>
-    <div class="timerrow">
-      <select id="timerSubjectSelect"></select>
-      <div class="timerdisplay" id="timerDisplay">00:00:00</div>
-    </div>
-    <div class="timeractions">
-      <button class="btn primary-sm" id="timerStartPauseBtn" onclick="timerStartPause()">▶ 開始</button>
-      <button class="btn" onclick="timerFinish()">✔ 結束並記錄</button>
-      <button class="btn" onclick="timerCancel()">✕ 取消</button>
+  <div class="collapsible" id="section-timer">
+    <h3 class="collapsible-head" onclick="toggleSection('section-timer')">
+      <span>⏱ 讀書計時器</span><span class="chev">▶</span>
+    </h3>
+    <div class="collapsible-body">
+      <div class="timerbox">
+        <div class="timerrow">
+          <select id="timerSubjectSelect"></select>
+          <div class="timerdisplay" id="timerDisplay">00:00:00</div>
+        </div>
+        <div class="timeractions">
+          <button class="btn primary-sm" id="timerStartPauseBtn" onclick="timerStartPause()">▶ 開始</button>
+          <button class="btn" onclick="timerFinish()">✔ 結束並記錄</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="calbox">
-    <div class="monthcal-head">
-      <button class="navbtn" onclick="calPrevMonth()">‹</button>
-      <span class="title" id="monthCalTitle"></span>
-      <button class="navbtn" onclick="calNextMonth()">›</button>
+  <div class="collapsible" id="section-calendar">
+    <h3 class="collapsible-head" onclick="toggleSection('section-calendar')">
+      <span>📅 行事曆</span><span class="chev">▶</span>
+    </h3>
+    <div class="collapsible-body">
+      <div class="calbox">
+        <div class="monthcal-head">
+          <button class="navbtn" onclick="calPrevMonth()">‹</button>
+          <span class="title" id="monthCalTitle"></span>
+          <button class="navbtn" onclick="calNextMonth()">›</button>
+        </div>
+        <div class="monthcal-grid" id="monthCalGrid"></div>
+        <div class="calday-detail" id="calDayDetail"></div>
+        <h3 style="margin-top:20px;">📅 近期考試倒數</h3>
+        <div id="examCalendar"></div>
+      </div>
     </div>
-    <div class="monthcal-grid" id="monthCalGrid"></div>
-    <div class="calday-detail" id="calDayDetail"></div>
-    <h3 style="margin-top:20px;">📅 近期考試倒數</h3>
-    <div id="examCalendar"></div>
   </div>
 
-  <div class="addbox">
-    <h3>➕ 新增追蹤科目</h3>
+  <div class="collapsible" id="section-add">
+    <h3 class="collapsible-head" onclick="toggleSection('section-add')">
+      <span>➕ 新增追蹤科目</span><span class="chev">▶</span>
+    </h3>
+    <div class="collapsible-body">
+    <div class="addbox">
     <p class="hint">
       貼上 YouTube「播放清單」的完整分享連結（網址需包含 <code>list=</code> 參數，例如
       <code>https://youtube.com/playlist?list=PL68D2uCy1WTMtp1m5TEJbKEt4kvlA4jLP</code>），
@@ -330,6 +380,8 @@
     <div class="actions">
       <button class="primary" id="newSubjSubmitBtn" onclick="submitNewSubject()">＋ 自動抓取並建立科目</button>
       <span class="savehint" id="addSubjHint"></span>
+    </div>
+    </div>
     </div>
   </div>
 
@@ -819,7 +871,10 @@ function buildTabs(){
         <div class="studystats" id="studystats-${subj.key}"></div>
         <div class="exambox" id="exambox-${subj.key}"></div>
       </div>
-      <div class="unit-list" id="list-${subj.key}"></div>
+      <button class="unitlist-toggle" onclick="toggleUnitList('${subj.key}')">
+        <span id="unitToggleLabel-${subj.key}">▶ 顯示課程清單（${total} 部影片）</span>
+      </button>
+      <div class="unit-list" id="list-${subj.key}" style="display:none;"></div>
     `;
     panelsEl.appendChild(panel);
     renderHeadTop(subj.key);
@@ -863,6 +918,26 @@ function switchTab(key){
   document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
   document.getElementById("tabbtn-"+key).classList.add("active");
   document.getElementById("panel-"+key).classList.add("active");
+}
+
+function toggleSection(id){
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle("open");
+}
+
+function toggleUnitList(key){
+  const list = document.getElementById("list-"+key);
+  const label = document.getElementById("unitToggleLabel-"+key);
+  if (!list || !label) return;
+  const isOpen = list.style.display !== "none";
+  const total = RAW[key] ? RAW[key].length : 0;
+  if (isOpen){
+    list.style.display = "none";
+    label.textContent = `▶ 顯示課程清單（${total} 部影片）`;
+  } else {
+    list.style.display = "flex";
+    label.textContent = `▼ 隱藏課程清單`;
+  }
 }
 
 function escapeHtml(s){
@@ -1387,11 +1462,11 @@ function renderMonthCalendar(){
     const isToday = c.dateStr === todayStr;
     const isSelected = c.dateStr === selectedCalDay;
     const hasExam = !!examMap[c.dateStr];
-    const hasStudy = !!studyMap[c.dateStr];
-    const dots = (hasExam? `<span class="dot exam"></span>`:"") + (hasStudy? `<span class="dot study"></span>`:"");
+    const studyMin = studyMap[c.dateStr] || 0;
+    const meta = (hasExam? `<span class="dot exam"></span>`:"") + (studyMin>0? `<span class="studymin">${studyMin}m</span>`:"");
     return `<div class="monthcal-day ${isToday?"today":""} ${isSelected?"selected":""}" onclick="selectCalDay('${c.dateStr}')">
       <span class="daynum">${c.dayNum}</span>
-      <span class="dots">${dots}</span>
+      <span class="dots">${meta}</span>
     </div>`;
   }).join("");
 
@@ -1503,12 +1578,6 @@ function timerReset(){
   updateTimerUI();
 }
 
-function timerCancel(){
-  if (timerState.elapsedMs===0 && !timerState.running){ return; }
-  if (!confirm("確定要放棄這次計時，不儲存記錄嗎？")) return;
-  timerReset();
-}
-
 function timerFinish(){
   if (timerState.running){
     timerState.elapsedMs = Date.now() - timerState.startTs;
@@ -1530,6 +1599,7 @@ function timerFinish(){
   timerReset();
   renderStudyStats(key);
   renderMonthCalendar();
+  renderTopStudyStats();
 }
 
 function renderStudyStats(key){
@@ -1540,7 +1610,35 @@ function renderStudyStats(key){
   const h = Math.floor(totalMin/60), m = totalMin%60;
   const recent = log.slice(-5).reverse();
   el.innerHTML = `<div class="statline">⏱ 累計讀書時數：<b>${h} 小時 ${m} 分鐘</b>（共 ${log.length} 次記錄）</div>` +
-    (recent.length ? `<div class="studyrecent">${recent.map(r=>`<span class="studychip">${escapeHtml(r.date)} · ${r.minutes} 分</span>`).join("")}</div>` : "");
+    (recent.length ? `<div class="studyrecent">${recent.map(r=>`<span class="studychip">${escapeHtml(r.date)} · ${r.minutes} 分<button class="chip-del" onclick="deleteStudyLogEntry('${r.id}','${key}')" title="刪除這筆記錄">✕</button></span>`).join("")}</div>` : "");
+}
+
+function deleteStudyLogEntry(logId, key){
+  if (!confirm("確定要刪除這筆讀書記錄嗎？此動作無法復原。")) return;
+  saveStudyLog(loadStudyLog().filter(l=>l.id!==logId));
+  renderStudyStats(key);
+  renderMonthCalendar();
+  renderTopStudyStats();
+}
+
+function renderTopStudyStats(){
+  const el = document.getElementById("topStats");
+  if (!el) return;
+  const log = loadStudyLog();
+  const todayStr = new Date().toISOString().slice(0,10);
+  const todayMin = log.filter(l=>l.date===todayStr).reduce((s,l)=>s+l.minutes,0);
+  const totalMin = log.reduce((s,l)=>s+l.minutes,0);
+  const fmt = (min)=>{ const h=Math.floor(min/60), m=min%60; return `${h} 小時 ${m} 分鐘`; };
+  el.innerHTML = `
+    <div class="topstat-card">
+      <div class="topstat-label">📖 今天讀書時間</div>
+      <div class="topstat-value">${fmt(todayMin)}</div>
+    </div>
+    <div class="topstat-card">
+      <div class="topstat-label">🏆 累計總讀書時數</div>
+      <div class="topstat-value">${fmt(totalMin)}</div>
+    </div>
+  `;
 }
 
 /* ---------- 匯出 / 匯入 / 重設 ---------- */
@@ -1603,6 +1701,7 @@ applySubjectOverridesToData();
 updateApiKeyStatus();
 buildTabs();
 renderOverview();
+renderTopStudyStats();
 timerReset();
 </script>
 </body>
