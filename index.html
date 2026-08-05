@@ -267,11 +267,32 @@
   }
   .topstat-label{ font-size:0.8rem; color:var(--sub); margin-bottom:6px; }
   .topstat-value{ font-size:1.4rem; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .goal-input{
+    width:60px; font-size:0.7rem; padding:2px 4px; margin-left:6px;
+    border:1px solid var(--border); border-radius:4px; background:var(--bg); color:var(--text); font-family:inherit;
+  }
+  .goal-bar{ margin-top:8px; }
   .chart-card svg{ display:block; }
   .chart-card .chart-empty{ color:var(--sub); font-size:0.78rem; margin:0; }
+  .chart-sub{ font-size:0.72rem; color:var(--sub); margin-top:6px; }
   .chart-legend{ margin-top:6px; display:flex; flex-wrap:wrap; }
   .chart-legend-item{ display:inline-flex; align-items:center; gap:4px; margin-right:8px; font-size:0.7rem; color:var(--sub); }
   .chart-legend-dot{ width:8px; height:8px; border-radius:2px; display:inline-block; }
+
+  .badge-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; }
+  .badge{ background:var(--card); border:1px solid var(--border); border-radius:6px; padding:10px 12px; font-size:0.8rem; }
+  .badge.locked{ opacity:0.4; }
+  .badge .badge-date{ color:var(--sub); font-size:0.7rem; margin-top:3px; }
+
+  .review-flag-btn{ font-size:0.85rem; padding:4px 8px; flex-shrink:0; line-height:1; }
+  .review-due-row{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    padding:9px 0; border-top:1px solid var(--border); font-size:0.84rem;
+  }
+  .review-due-row:first-of-type{ border-top:none; }
+  .review-due-row .rd-subject{ font-weight:600; min-width:100px; }
+  .review-due-row .rd-title{ color:var(--sub); flex:1; }
+  .review-due-row .rd-actions{ display:flex; gap:6px; }
 
   .collapsible-head{
     display:flex; align-items:center; justify-content:space-between; cursor:pointer;
@@ -288,6 +309,13 @@
     width:100%; margin-bottom:12px; font-family:inherit;
   }
   .unitlist-toggle:hover{ background:var(--hover); color:var(--text); }
+
+  .notesbox{ margin-top:14px; padding-top:12px; border-top:1px solid var(--border); }
+
+  .unit-search{
+    width:100%; padding:8px 10px; margin-bottom:8px; border-radius:4px; border:1px solid var(--border);
+    background:var(--bg); color:var(--text); font-size:0.85rem; font-family:inherit;
+  }
 
   .timerbox{
     background:var(--card); border:1px solid var(--border); border-radius:6px;
@@ -427,6 +455,24 @@
         <h3 style="margin-top:20px;">📋 近期考試倒數</h3>
         <div id="examCalendar"></div>
       </div>
+    </div>
+  </div>
+
+  <div class="collapsible" id="section-achievements">
+    <h3 class="collapsible-head" onclick="toggleSection('section-achievements')">
+      <span>成就徽章</span><span class="chev">›</span>
+    </h3>
+    <div class="collapsible-body">
+      <div class="badge-grid" id="badgeGrid"></div>
+    </div>
+  </div>
+
+  <div class="collapsible" id="section-review">
+    <h3 class="collapsible-head" onclick="toggleSection('section-review')">
+      <span>待複習清單</span><span class="chev">›</span>
+    </h3>
+    <div class="collapsible-body">
+      <div id="reviewDueList"></div>
     </div>
   </div>
 
@@ -862,8 +908,10 @@ function toggleUnit(subjectKey, id, field, checked){
   renderExamCalendar();
   if (field === "watched"){
     const afterPct = watchedPct(subjectKey);
-    if (beforePct < 1 && afterPct >= 1) fireConfetti();
+    if (beforePct < 1 && afterPct >= 1) requestConfetti();
+    if (!checked) clearReviewFlag(subjectKey, id);
   }
+  checkAchievements();
 }
 
 function watchedPct(key){
@@ -883,6 +931,13 @@ function fireConfetti(){
     document.body.appendChild(p);
     setTimeout(()=>p.remove(), 1800);
   }
+}
+
+let confettiQueued = false;
+function requestConfetti(){
+  if (confettiQueued) return;
+  confettiQueued = true;
+  queueMicrotask(()=>{ fireConfetti(); confettiQueued = false; });
 }
 
 /* ---------- 渲染 ---------- */
@@ -969,7 +1024,8 @@ function markDoneUpTo(subjectKey, uptoIndex){
   renderExamCalendar();
   renderMonthCalendar();
   const afterPct = watchedPct(subjectKey);
-  if (beforePct < 1 && afterPct >= 1) fireConfetti();
+  if (beforePct < 1 && afterPct >= 1) requestConfetti();
+  checkAchievements();
 }
 
 function buildTabs(){
@@ -1009,7 +1065,11 @@ function buildTabs(){
         </div>
         <div class="studystats" id="studystats-${subj.key}"></div>
         <div class="exambox" id="exambox-${subj.key}"></div>
+        <div class="notesbox">
+          <textarea class="examscope" placeholder="個人筆記（例如：易錯觀念、待複習重點）" onchange="setSubjectNote('${subj.key}', this.value)">${escapeHtml(loadSubjectNotes()[subj.key]||"")}</textarea>
+        </div>
       </div>
+      <input type="text" class="unit-search" id="search-${subj.key}" placeholder="搜尋影片標題..." oninput="filterUnitList('${subj.key}', this.value)">
       <button class="unitlist-toggle" onclick="toggleUnitList('${subj.key}')">
         <span id="unitToggleLabel-${subj.key}">› 顯示課程清單（${total} 部影片）</span>
       </button>
@@ -1037,6 +1097,7 @@ function buildTabs(){
         </div>
         <a class="watch" href="https://www.youtube.com/watch?v=${item.id}" target="_blank" rel="noopener">› 觀看</a>
         <button class="btn batch-btn" onclick="markDoneUpTo('${subj.key}', ${i})" title="將 #1 到 #${i+1} 全部標記為已完成">✓ 補標至此</button>
+        <button class="btn review-flag-btn" onclick="toggleReviewFlag('${subj.key}','${item.id}')" title="標記待複習">${loadReviewFlags()[subj.key]?.[item.id] ? "★" : "☆"}</button>
         <label><input type="checkbox" ${s.watched?"checked":""} onchange="toggleUnit('${subj.key}','${item.id}','watched',this.checked)"> 已觀看</label>
         <label><input type="checkbox" ${s.practiced?"checked":""} onchange="toggleUnit('${subj.key}','${item.id}','practiced',this.checked)"> 練習題完成</label>
       `;
@@ -1078,6 +1139,22 @@ function toggleUnitList(key){
     list.style.display = "flex";
     label.textContent = `▼ 隱藏課程清單`;
   }
+}
+
+function filterUnitList(key, query){
+  const list = document.getElementById("list-"+key);
+  if (!list) return;
+  const q = query.trim().toLowerCase();
+  if (q && list.style.display === "none"){
+    list.style.display = "flex";
+    const label = document.getElementById("unitToggleLabel-"+key);
+    if (label) label.textContent = "▼ 隱藏課程清單";
+  }
+  list.querySelectorAll(".unit").forEach(row=>{
+    const title = (row.querySelector(".title")?.textContent||"").toLowerCase();
+    const chip = (row.querySelector(".chip")?.textContent||"").toLowerCase();
+    row.style.display = (!q || title.includes(q) || chip.includes(q)) ? "" : "none";
+  });
 }
 
 function escapeHtml(s){
@@ -1245,10 +1322,17 @@ function deleteSubject(key){
   cleanupStudyLogsForSubject(key);
   saveState();
   saveExamDates();
+  const notes = loadSubjectNotes();
+  delete notes[key];
+  saveSubjectNotes(notes);
+  const flags = loadReviewFlags();
+  delete flags[key];
+  saveReviewFlags(flags);
   buildTabs();
   renderOverview();
   renderExamCalendar();
   renderMonthCalendar();
+  renderReviewDueList();
   const firstKey = Object.keys(SUBJECTS)[0];
   if (firstKey) switchTab(firstKey);
 }
@@ -1394,6 +1478,114 @@ async function submitNewSubject(){
 }
 
 /* ---------- 考試日期（可自訂多場） ---------- */
+
+/* ---------- 科目筆記 ---------- */
+
+const SUBJECT_NOTES_KEY = "subjectNotes_v1";
+
+function loadSubjectNotes(){
+  try{ return JSON.parse(localStorage.getItem(SUBJECT_NOTES_KEY)) || {}; }catch(e){ return {}; }
+}
+
+function saveSubjectNotes(m){
+  localStorage.setItem(SUBJECT_NOTES_KEY, JSON.stringify(m));
+}
+
+function setSubjectNote(key, text){
+  const m = loadSubjectNotes();
+  m[key] = text;
+  saveSubjectNotes(m);
+}
+
+/* ---------- 複習標記提醒 ---------- */
+
+const REVIEW_FLAGS_KEY = "reviewFlags_v1";
+const REVIEW_INTERVAL_DAYS = 3;
+
+function loadReviewFlags(){
+  try{ return JSON.parse(localStorage.getItem(REVIEW_FLAGS_KEY)) || {}; }catch(e){ return {}; }
+}
+
+function saveReviewFlags(m){
+  localStorage.setItem(REVIEW_FLAGS_KEY, JSON.stringify(m));
+}
+
+function isReviewDue(flaggedAt){
+  const due = new Date(flaggedAt+"T00:00:00");
+  due.setDate(due.getDate()+REVIEW_INTERVAL_DAYS);
+  return new Date().toISOString().slice(0,10) >= due.toISOString().slice(0,10);
+}
+
+function toggleReviewFlag(key,id){
+  const flags = loadReviewFlags();
+  if (!flags[key]) flags[key] = {};
+  if (flags[key][id]) delete flags[key][id];
+  else flags[key][id] = {flaggedAt:new Date().toISOString().slice(0,10)};
+  saveReviewFlags(flags);
+  updateReviewBtnStyle(key,id);
+  renderReviewDueList();
+}
+
+function clearReviewFlag(key,id){
+  const flags = loadReviewFlags();
+  if (flags[key] && flags[key][id]){
+    delete flags[key][id];
+    saveReviewFlags(flags);
+    updateReviewBtnStyle(key,id);
+    renderReviewDueList();
+  }
+}
+
+function updateReviewBtnStyle(key,id){
+  const row = document.querySelector(`.unit[data-key="${key}"][data-id="${id}"]`);
+  const btn = row?.querySelector(".review-flag-btn");
+  if (!btn) return;
+  const flagged = !!(loadReviewFlags()[key]?.[id]);
+  btn.textContent = flagged ? "★" : "☆";
+}
+
+function removeReviewFlag(key,id){
+  clearReviewFlag(key,id);
+}
+
+function reflagReview(key,id){
+  const flags = loadReviewFlags();
+  if (!flags[key]) flags[key] = {};
+  flags[key][id] = {flaggedAt:new Date().toISOString().slice(0,10)};
+  saveReviewFlags(flags);
+  renderReviewDueList();
+}
+
+function renderReviewDueList(){
+  const el = document.getElementById("reviewDueList");
+  if (!el) return;
+  const flags = loadReviewFlags();
+  const due = [];
+  Object.keys(flags).forEach(key=>{
+    if (!RAW[key]) return;
+    Object.keys(flags[key]).forEach(id=>{
+      const entry = flags[key][id];
+      if (isReviewDue(entry.flaggedAt)){
+        const item = RAW[key].find(it=>it.id===id);
+        if (item) due.push({key, id, title:item.t, flaggedAt:entry.flaggedAt, subjectName:SUBJECTS[key]?.name||key});
+      }
+    });
+  });
+  if (!due.length){
+    el.innerHTML = `<p class="empty" style="color:var(--sub);">目前沒有待複習的項目</p>`;
+    return;
+  }
+  el.innerHTML = due.map(d=>`
+    <div class="review-due-row">
+      <span class="rd-subject">${escapeHtml(d.subjectName)}</span>
+      <span class="rd-title">${escapeHtml(d.title)}</span>
+      <div class="rd-actions">
+        <button class="btn" onclick="removeReviewFlag('${d.key}','${d.id}')">已複習</button>
+        <button class="btn" onclick="reflagReview('${d.key}','${d.id}')">延後複習</button>
+      </div>
+    </div>
+  `).join("");
+}
 
 const EXAM_KEY = "examDates_v1";
 
@@ -1800,13 +1992,23 @@ function timerFinish(){
   const key = timerState.subjectKey;
   const dateStr = new Date().toISOString().slice(0,10);
   const log = loadStudyLog();
+  const goals = loadStudyGoals();
+  const beforeToday = log.filter(l=>l.date===dateStr).reduce((s,l)=>s+l.minutes,0);
+  const beforeWeek = weekTotal(0);
   log.push({id:"study_"+Date.now(), subjectKey:key, date:dateStr, minutes});
   saveStudyLog(log);
+  const afterToday = beforeToday + minutes;
+  const afterWeek = beforeWeek + minutes;
+  if ((goals.dailyMin && beforeToday < goals.dailyMin && afterToday >= goals.dailyMin) ||
+      (goals.weeklyMin && beforeWeek < goals.weeklyMin && afterWeek >= goals.weeklyMin)){
+    requestConfetti();
+  }
   alert(`已記錄：${SUBJECTS[key]?.name || key} 讀書 ${minutes} 分鐘`);
   timerReset();
   renderStudyStats(key);
   renderMonthCalendar();
   renderTopStudyStats();
+  checkAchievements();
 }
 
 function renderStudyStats(key){
@@ -1828,6 +2030,120 @@ function deleteStudyLogEntry(logId, key){
   renderTopStudyStats();
 }
 
+/* ---------- 讀書目標 / 連續天數 / 週報比較 ---------- */
+
+const STUDY_GOALS_KEY = "studyGoals_v1";
+
+function loadStudyGoals(){
+  try{ return Object.assign({dailyMin:null, weeklyMin:null}, JSON.parse(localStorage.getItem(STUDY_GOALS_KEY))); }catch(e){ return {dailyMin:null, weeklyMin:null}; }
+}
+
+function saveStudyGoals(g){
+  localStorage.setItem(STUDY_GOALS_KEY, JSON.stringify(g));
+}
+
+function setDailyGoal(v){
+  const goals = loadStudyGoals();
+  goals.dailyMin = v ? Math.max(0, parseInt(v,10)||0) : null;
+  saveStudyGoals(goals);
+  renderTopStudyStats();
+}
+
+function setWeeklyGoal(v){
+  const goals = loadStudyGoals();
+  goals.weeklyMin = v ? Math.max(0, parseInt(v,10)||0) : null;
+  saveStudyGoals(goals);
+  renderTopStudyStats();
+}
+
+function weekTotal(offsetDays){
+  const log = loadStudyLog();
+  let sum = 0;
+  for (let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i-offsetDays);
+    const ds = d.toISOString().slice(0,10);
+    sum += log.filter(l=>l.date===ds).reduce((s,l)=>s+l.minutes,0);
+  }
+  return sum;
+}
+
+function computeWeekComparison(){
+  const thisWeek = weekTotal(0), lastWeek = weekTotal(7);
+  const deltaPct = lastWeek>0 ? Math.round((thisWeek-lastWeek)/lastWeek*100) : null;
+  return {thisWeek, lastWeek, deltaPct};
+}
+
+function computeStreak(){
+  const days = new Set(loadStudyLog().map(l=>l.date));
+  let d = new Date();
+  let ds = d.toISOString().slice(0,10);
+  if (!days.has(ds)) d.setDate(d.getDate()-1);
+  let streak = 0;
+  while (days.has(d.toISOString().slice(0,10))){
+    streak++;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+
+/* ---------- 成就徽章 ---------- */
+
+const ACHIEVEMENTS_KEY = "achievements_v1";
+const ACHIEVEMENT_HOUR_TIERS = [10,25,50,100];
+const ACHIEVEMENT_STREAK_TIERS = [3,7,30];
+
+function loadAchievements(){
+  try{ return JSON.parse(localStorage.getItem(ACHIEVEMENTS_KEY)) || {}; }catch(e){ return {}; }
+}
+
+function saveAchievements(a){
+  localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(a));
+}
+
+function getAchievementDefs(){
+  const defs = [];
+  ACHIEVEMENT_HOUR_TIERS.forEach(h=> defs.push({
+    id:`hours_${h}`, label:`累計讀書 ${h} 小時`,
+    check:()=> loadStudyLog().reduce((s,l)=>s+l.minutes,0) >= h*60,
+  }));
+  ACHIEVEMENT_STREAK_TIERS.forEach(d=> defs.push({
+    id:`streak_${d}`, label:`連續讀書 ${d} 天`,
+    check:()=> computeStreak() >= d,
+  }));
+  Object.keys(SUBJECTS).forEach(key=> defs.push({
+    id:`subject_${key}`, label:`${SUBJECTS[key].name} 全部觀看完成`,
+    check:()=>{ const s = subjectStats(key); return s.total>0 && s.watched===s.total; },
+  }));
+  return defs;
+}
+
+function checkAchievements(silent){
+  const unlocked = loadAchievements();
+  let newlyUnlocked = false;
+  getAchievementDefs().forEach(def=>{
+    if (!unlocked[def.id] && def.check()){
+      unlocked[def.id] = {unlockedAt:new Date().toISOString().slice(0,10)};
+      newlyUnlocked = true;
+    }
+  });
+  saveAchievements(unlocked);
+  renderAchievementBadges();
+  if (newlyUnlocked && !silent) requestConfetti();
+}
+
+function renderAchievementBadges(){
+  const el = document.getElementById("badgeGrid");
+  if (!el) return;
+  const unlocked = loadAchievements();
+  el.innerHTML = getAchievementDefs().map(def=>{
+    const u = unlocked[def.id];
+    return `<div class="badge${u?"":" locked"}">
+      <div>${escapeHtml(def.label)}</div>
+      ${u ? `<div class="badge-date">已於 ${u.unlockedAt} 解鎖</div>` : `<div class="badge-date">尚未解鎖</div>`}
+    </div>`;
+  }).join("");
+}
+
 function renderTopStudyStats(){
   const el = document.getElementById("topStats");
   if (!el) return;
@@ -1835,15 +2151,28 @@ function renderTopStudyStats(){
   const todayStr = new Date().toISOString().slice(0,10);
   const todayMin = log.filter(l=>l.date===todayStr).reduce((s,l)=>s+l.minutes,0);
   const totalMin = log.reduce((s,l)=>s+l.minutes,0);
+  const weekMin = weekTotal(0);
+  const goals = loadStudyGoals();
   const fmt = (min)=>{ const h=Math.floor(min/60), m=min%60; return `${h} 小時 ${m} 分鐘`; };
+  const goalBar = (val, goalMin)=> goalMin ? `<div class="bar goal-bar"><span style="width:${Math.min(100, Math.round(val/goalMin*100))}%"></span></div>` : "";
   el.innerHTML = `
     <div class="topstat-card">
-      <div class="topstat-label">📗 今天讀書時間</div>
+      <div class="topstat-label">今天讀書時間<input type="number" class="goal-input" value="${goals.dailyMin||''}" placeholder="目標(分)" onchange="setDailyGoal(this.value)"></div>
       <div class="topstat-value">${fmt(todayMin)}</div>
+      ${goalBar(todayMin, goals.dailyMin)}
     </div>
     <div class="topstat-card">
-      <div class="topstat-label">🥇 累計總讀書時數</div>
+      <div class="topstat-label">本週讀書時間<input type="number" class="goal-input" value="${goals.weeklyMin||''}" placeholder="目標(分)" onchange="setWeeklyGoal(this.value)"></div>
+      <div class="topstat-value">${fmt(weekMin)}</div>
+      ${goalBar(weekMin, goals.weeklyMin)}
+    </div>
+    <div class="topstat-card">
+      <div class="topstat-label">累計總讀書時數</div>
       <div class="topstat-value">${fmt(totalMin)}</div>
+    </div>
+    <div class="topstat-card">
+      <div class="topstat-label">連續讀書天數</div>
+      <div class="topstat-value">${computeStreak()} 天</div>
     </div>
   `;
   renderWeeklyBarChart();
@@ -1874,7 +2203,11 @@ function renderWeeklyBarChart(){
     return `<rect x="${x}" y="${70-bh}" width="${bw}" height="${bh}" rx="3" fill="var(--accent)"/>
             <text x="${x+bw/2}" y="84" text-anchor="middle" font-size="9" fill="var(--sub)">${d.label}</text>`;
   }).join("");
-  el.innerHTML = `<svg viewBox="0 0 ${7*(bw+gap)-gap} 90" width="100%" height="90">${bars}</svg>`;
+  const cmp = computeWeekComparison();
+  const cmpText = cmp.deltaPct===null ? "上週無記錄可比較"
+    : cmp.deltaPct>=0 ? `本週 ${cmp.thisWeek} 分鐘（↑ ${cmp.deltaPct}% 較上週）`
+    : `本週 ${cmp.thisWeek} 分鐘（↓ ${Math.abs(cmp.deltaPct)}% 較上週）`;
+  el.innerHTML = `<svg viewBox="0 0 ${7*(bw+gap)-gap} 90" width="100%" height="90">${bars}</svg><div class="chart-sub">${cmpText}</div>`;
 }
 
 function renderSubjectPieChart(){
@@ -1915,6 +2248,8 @@ function exportData(){
   const bundle = {
     state, examDates, customSubjects: loadCustomSubjectsList(),
     studyLog: loadStudyLog(), subjectOverrides, deletedBuiltins,
+    subjectNotes: loadSubjectNotes(), studyGoals: loadStudyGoals(),
+    achievements: loadAchievements(), reviewFlags: loadReviewFlags(),
   };
   const blob = new Blob([JSON.stringify(bundle,null,2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
@@ -1940,6 +2275,10 @@ function importData(evt){
         if (data.studyLog) saveStudyLog(data.studyLog);
         if (data.subjectOverrides){ subjectOverrides = data.subjectOverrides; saveSubjectOverrides(); }
         if (data.deletedBuiltins){ deletedBuiltins = data.deletedBuiltins; saveDeletedBuiltins(); }
+        if (data.subjectNotes) saveSubjectNotes(data.subjectNotes);
+        if (data.studyGoals) saveStudyGoals(data.studyGoals);
+        if (data.achievements) saveAchievements(data.achievements);
+        if (data.reviewFlags) saveReviewFlags(data.reviewFlags);
       } else {
         state = data;
       }
@@ -1993,6 +2332,8 @@ renderOverview();
 renderTopStudyStats();
 initTheme();
 timerReset();
+checkAchievements(!localStorage.getItem(ACHIEVEMENTS_KEY));
+renderReviewDueList();
 </script>
 </body>
 </html>
