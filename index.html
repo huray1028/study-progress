@@ -5,75 +5,95 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>讀書進度追蹤</title>
 <style>
-  /* ============ 設計代幣（4 種主題） ============ */
+  /* ============ 設計代幣 ============
+     2026 配色方向：暖中性底色（oatmeal / putty / greige）取代冷灰，
+     搭配克制的靛紫 accent。共 5 種主題。 */
+
+  /* --- 淺色（暖燕麥 + 靛紫），同時作為未指定主題時的預設 --- */
   :root{
-    --bg:#ffffff; --page:#f7f7f5; --card:#ffffff; --card2:#fbfbfa;
-    --text:#1f1e1c; --sub:#6b6a67; --faint:#9a9895;
-    --border:rgba(31,30,28,0.10); --border-strong:rgba(31,30,28,0.20);
-    --accent:#2f6df6; --accent2:#0f9b76; --accent-soft:rgba(47,109,246,0.10);
+    --bg:#ffffff; --page:#faf8f5; --card:#ffffff; --card2:#f5f2ed;
+    --text:#231f20; --sub:#6c645d; --faint:#9d948b;
+    --border:rgba(35,31,32,0.09); --border-strong:rgba(35,31,32,0.18);
+    --accent:#5b5bd6; --accent2:#0f8a6d; --accent-soft:rgba(91,91,214,0.09);
     --accent-ink:#ffffff;
-    --track:#eceae7; --danger:#e0483d; --danger-soft:rgba(224,72,61,0.10);
-    --warn:#d98324; --success:#0f9b76; --chip:#f0efec; --hover:rgba(31,30,28,0.05);
-    --shadow-sm:0 1px 2px rgba(0,0,0,0.05);
-    --shadow-md:0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-lg:0 12px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06);
-    --heat0:#eceae7; --heat1:#c9e2d6; --heat2:#8fcbb0; --heat3:#4aab86; --heat4:#0f8a63;
+    --track:#e9e4dc; --danger:#d1453b; --danger-soft:rgba(209,69,59,0.09);
+    --warn:#c2761a; --success:#0f8a6d; --chip:#f0ece5; --hover:rgba(35,31,32,0.045);
+    --shadow-sm:0 1px 2px rgba(60,48,40,0.05);
+    --shadow-md:0 2px 10px rgba(60,48,40,0.07), 0 1px 2px rgba(60,48,40,0.04);
+    --shadow-lg:0 14px 38px rgba(60,48,40,0.14), 0 3px 10px rgba(60,48,40,0.06);
+    --heat0:#e9e4dc; --heat1:#cfe3d8; --heat2:#9acbb5; --heat3:#57ab8c; --heat4:#0f8a6d;
   }
+
+  /* --- 深色（暖炭 + 柔靛紫） --- */
   @media (prefers-color-scheme: dark){
     :root{
-      --bg:#17171a; --page:#121214; --card:#1d1d21; --card2:#232328;
-      --text:#e8e8ea; --sub:#a0a0a8; --faint:#6e6e78;
-      --border:rgba(255,255,255,0.09); --border-strong:rgba(255,255,255,0.18);
-      --accent:#6494ff; --accent2:#3fbf9a; --accent-soft:rgba(100,148,255,0.14);
-      --accent-ink:#0d1220;
-      --track:#2a2a30; --danger:#ff6f61; --danger-soft:rgba(255,111,97,0.14);
-      --warn:#e8a33d; --success:#3fbf9a; --chip:#2a2a30; --hover:rgba(255,255,255,0.06);
-      --shadow-sm:0 1px 2px rgba(0,0,0,0.4);
-      --shadow-md:0 2px 8px rgba(0,0,0,0.45);
-      --shadow-lg:0 12px 32px rgba(0,0,0,0.6);
-      --heat0:#26262c; --heat1:#1f4d3e; --heat2:#2a7359; --heat3:#359a75; --heat4:#45c496;
+      --bg:#151317; --page:#100e12; --card:#1a181d; --card2:#221f26;
+      --text:#eceaeb; --sub:#a49ea6; --faint:#6f6873;
+      --border:rgba(255,255,255,0.085); --border-strong:rgba(255,255,255,0.17);
+      --accent:#8f8ff5; --accent2:#3fbf9a; --accent-soft:rgba(143,143,245,0.15);
+      --accent-ink:#141020;
+      --track:#2a262f; --danger:#ff6b5e; --danger-soft:rgba(255,107,94,0.15);
+      --warn:#e0a13d; --success:#3fbf9a; --chip:#282430; --hover:rgba(255,255,255,0.055);
+      --shadow-sm:0 1px 2px rgba(0,0,0,0.45);
+      --shadow-md:0 2px 10px rgba(0,0,0,0.5);
+      --shadow-lg:0 14px 38px rgba(0,0,0,0.65);
+      --heat0:#241f2a; --heat1:#1d4a3c; --heat2:#276e58; --heat3:#329474; --heat4:#43bf95;
     }
   }
   :root[data-theme="dark"]{
-    --bg:#17171a; --page:#121214; --card:#1d1d21; --card2:#232328;
-    --text:#e8e8ea; --sub:#a0a0a8; --faint:#6e6e78;
-    --border:rgba(255,255,255,0.09); --border-strong:rgba(255,255,255,0.18);
-    --accent:#6494ff; --accent2:#3fbf9a; --accent-soft:rgba(100,148,255,0.14);
-    --accent-ink:#0d1220;
-    --track:#2a2a30; --danger:#ff6f61; --danger-soft:rgba(255,111,97,0.14);
-    --warn:#e8a33d; --success:#3fbf9a; --chip:#2a2a30; --hover:rgba(255,255,255,0.06);
-    --shadow-sm:0 1px 2px rgba(0,0,0,0.4);
-    --shadow-md:0 2px 8px rgba(0,0,0,0.45);
-    --shadow-lg:0 12px 32px rgba(0,0,0,0.6);
-    --heat0:#26262c; --heat1:#1f4d3e; --heat2:#2a7359; --heat3:#359a75; --heat4:#45c496;
+    --bg:#151317; --page:#100e12; --card:#1a181d; --card2:#221f26;
+    --text:#eceaeb; --sub:#a49ea6; --faint:#6f6873;
+    --border:rgba(255,255,255,0.085); --border-strong:rgba(255,255,255,0.17);
+    --accent:#8f8ff5; --accent2:#3fbf9a; --accent-soft:rgba(143,143,245,0.15);
+    --accent-ink:#141020;
+    --track:#2a262f; --danger:#ff6b5e; --danger-soft:rgba(255,107,94,0.15);
+    --warn:#e0a13d; --success:#3fbf9a; --chip:#282430; --hover:rgba(255,255,255,0.055);
+    --shadow-sm:0 1px 2px rgba(0,0,0,0.45);
+    --shadow-md:0 2px 10px rgba(0,0,0,0.5);
+    --shadow-lg:0 14px 38px rgba(0,0,0,0.65);
+    --heat0:#241f2a; --heat1:#1d4a3c; --heat2:#276e58; --heat3:#329474; --heat4:#43bf95;
   }
   :root[data-theme="light"]{
-    --bg:#ffffff; --page:#f7f7f5; --card:#ffffff; --card2:#fbfbfa;
-    --text:#1f1e1c; --sub:#6b6a67; --faint:#9a9895;
-    --border:rgba(31,30,28,0.10); --border-strong:rgba(31,30,28,0.20);
-    --accent:#2f6df6; --accent2:#0f9b76; --accent-soft:rgba(47,109,246,0.10);
+    --bg:#ffffff; --page:#faf8f5; --card:#ffffff; --card2:#f5f2ed;
+    --text:#231f20; --sub:#6c645d; --faint:#9d948b;
+    --border:rgba(35,31,32,0.09); --border-strong:rgba(35,31,32,0.18);
+    --accent:#5b5bd6; --accent2:#0f8a6d; --accent-soft:rgba(91,91,214,0.09);
     --accent-ink:#ffffff;
-    --track:#eceae7; --danger:#e0483d; --danger-soft:rgba(224,72,61,0.10);
-    --warn:#d98324; --success:#0f9b76; --chip:#f0efec; --hover:rgba(31,30,28,0.05);
-    --shadow-sm:0 1px 2px rgba(0,0,0,0.05);
-    --shadow-md:0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-lg:0 12px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06);
-    --heat0:#eceae7; --heat1:#c9e2d6; --heat2:#8fcbb0; --heat3:#4aab86; --heat4:#0f8a63;
+    --track:#e9e4dc; --danger:#d1453b; --danger-soft:rgba(209,69,59,0.09);
+    --warn:#c2761a; --success:#0f8a6d; --chip:#f0ece5; --hover:rgba(35,31,32,0.045);
+    --shadow-sm:0 1px 2px rgba(60,48,40,0.05);
+    --shadow-md:0 2px 10px rgba(60,48,40,0.07), 0 1px 2px rgba(60,48,40,0.04);
+    --shadow-lg:0 14px 38px rgba(60,48,40,0.14), 0 3px 10px rgba(60,48,40,0.06);
+    --heat0:#e9e4dc; --heat1:#cfe3d8; --heat2:#9acbb5; --heat3:#57ab8c; --heat4:#0f8a6d;
   }
+  /* --- 抹茶綠（暖鼠尾草） --- */
   :root[data-theme="matcha"]{
-    --bg:#fdfdf8; --page:#f2f5ea; --card:#ffffff; --card2:#f8faf2;
-    --text:#26331f; --sub:#63755a; --faint:#93a389;
-    --border:rgba(74,124,52,0.14); --border-strong:rgba(74,124,52,0.28);
-    --accent:#5a9138; --accent2:#2f7d55; --accent-soft:rgba(90,145,56,0.12);
+    --bg:#fdfdf8; --page:#f4f6ec; --card:#ffffff; --card2:#eef1e4;
+    --text:#28321f; --sub:#68765c; --faint:#98a48c;
+    --border:rgba(74,120,50,0.13); --border-strong:rgba(74,120,50,0.26);
+    --accent:#5c8a3c; --accent2:#2b7a55; --accent-soft:rgba(92,138,60,0.11);
     --accent-ink:#ffffff;
-    --track:#e2ead4; --danger:#c85a45; --danger-soft:rgba(200,90,69,0.12);
-    --warn:#c98a2b; --success:#2f7d55; --chip:#e9f0dc; --hover:rgba(90,145,56,0.08);
-    --shadow-sm:0 1px 2px rgba(51,66,43,0.06);
-    --shadow-md:0 2px 8px rgba(51,66,43,0.08);
-    --shadow-lg:0 12px 32px rgba(51,66,43,0.15);
-    --heat0:#e2ead4; --heat1:#c3daa5; --heat2:#9cc474; --heat3:#71a548; --heat4:#4a7c2c;
+    --track:#e0e8d0; --danger:#c15540; --danger-soft:rgba(193,85,64,0.11);
+    --warn:#b8801f; --success:#2b7a55; --chip:#e8eed9; --hover:rgba(92,138,60,0.07);
+    --shadow-sm:0 1px 2px rgba(45,60,35,0.06);
+    --shadow-md:0 2px 10px rgba(45,60,35,0.08);
+    --shadow-lg:0 14px 38px rgba(45,60,35,0.16);
+    --heat0:#e0e8d0; --heat1:#c6dcaa; --heat2:#9fc47c; --heat3:#75a851; --heat4:#4a7c2c;
   }
-
+  /* --- 奶茶（暖琥珀，長時間閱讀最不刺眼） --- */
+  :root[data-theme="milktea"]{
+    --bg:#fffdfa; --page:#f8f3ec; --card:#fffdfa; --card2:#f2ebe0;
+    --text:#2e2620; --sub:#7a6a58; --faint:#a89684;
+    --border:rgba(90,66,44,0.12); --border-strong:rgba(90,66,44,0.24);
+    --accent:#b5713a; --accent2:#6f7d4a; --accent-soft:rgba(181,113,58,0.11);
+    --accent-ink:#ffffff;
+    --track:#e6dccb; --danger:#c0553e; --danger-soft:rgba(192,85,62,0.11);
+    --warn:#b5713a; --success:#6f7d4a; --chip:#efe6d8; --hover:rgba(90,66,44,0.055);
+    --shadow-sm:0 1px 2px rgba(90,66,44,0.06);
+    --shadow-md:0 2px 10px rgba(90,66,44,0.08);
+    --shadow-lg:0 14px 38px rgba(90,66,44,0.15);
+    --heat0:#e6dccb; --heat1:#e0cba6; --heat2:#d4ad78; --heat3:#c08d4d; --heat4:#a06a2c;
+  }
   /* ============ 基礎 ============ */
   *{ box-sizing:border-box; }
   html,body{ height:100%; }
@@ -712,6 +732,228 @@
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
   }
+
+  /* ============================================================
+     v3 新增：記憶卡 / 音樂小工具 / 每日任務 / 通用 Modal
+     ============================================================ */
+
+  /* ---------- 通用 Modal ---------- */
+  .modal-back{
+    position:fixed; inset:0; z-index:280; background:rgba(20,16,18,0.42);
+    backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-back.on{ display:flex; }
+  .modal{
+    background:var(--card); border:1px solid var(--border); border-radius:18px;
+    box-shadow:var(--shadow-lg); width:100%; max-width:520px; max-height:86vh;
+    display:flex; flex-direction:column; overflow:hidden; animation:modalIn .18s cubic-bezier(.2,1.1,.4,1);
+  }
+  @keyframes modalIn{ from{ opacity:0; transform:translateY(12px) scale(0.97);} to{ opacity:1; transform:none;} }
+  .modal-head{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:18px 20px 14px; border-bottom:1px solid var(--border);
+  }
+  .modal-title{ font-size:1.05rem; font-weight:680; }
+  .modal-sub{ font-size:0.76rem; color:var(--faint); margin-top:2px; }
+  .modal-body{ padding:18px 20px; overflow-y:auto; flex:1; }
+  .modal-foot{ padding:14px 20px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+  .modal-x{
+    width:32px; height:32px; border-radius:9px; border:none; background:none; color:var(--faint);
+    cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1.1rem;
+  }
+  .modal-x:hover{ background:var(--hover); color:var(--text); }
+  .modal-sec{ margin-bottom:18px; }
+  .modal-sec:last-child{ margin-bottom:0; }
+  .modal-sec-t{
+    font-size:0.72rem; font-weight:700; color:var(--faint); letter-spacing:0.06em;
+    text-transform:uppercase; margin-bottom:9px;
+  }
+
+  /* ---------- 每日任務 ---------- */
+  .task{
+    display:flex; align-items:flex-start; gap:11px; padding:10px 12px; border-radius:10px;
+    border:1px solid var(--border); background:var(--card); margin-bottom:7px; transition:all .13s;
+  }
+  .task:hover{ border-color:var(--border-strong); }
+  .task.done{ opacity:0.5; }
+  .task.done .task-title{ text-decoration:line-through; text-decoration-color:var(--faint); }
+  .task-check{
+    appearance:none; -webkit-appearance:none; width:19px; height:19px; border-radius:50%;
+    border:1.8px solid var(--border-strong); background:var(--card); cursor:pointer;
+    position:relative; margin:0; flex-shrink:0; margin-top:1px; transition:all .13s;
+  }
+  .task-check:hover{ border-color:var(--accent); }
+  .task-check:checked{ background:var(--accent); border-color:var(--accent); }
+  .task-check:checked::after{
+    content:""; position:absolute; left:5.5px; top:2px; width:5px; height:10px;
+    border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); animation:checkPop .26s ease-out;
+  }
+  .task-body{ flex:1; min-width:0; }
+  .task-title{ font-size:0.86rem; line-height:1.45; word-break:break-word; }
+  .task-meta{ display:flex; gap:7px; align-items:center; margin-top:4px; flex-wrap:wrap; }
+  .task-del{
+    width:26px; height:26px; border-radius:7px; border:none; background:none; color:var(--faint);
+    cursor:pointer; flex-shrink:0; font-size:0.8rem; opacity:0; transition:opacity .13s;
+  }
+  .task:hover .task-del{ opacity:1; }
+  .task-del:hover{ background:var(--danger-soft); color:var(--danger); }
+  @media (hover:none){ .task-del{ opacity:1; } }
+
+  .quickadd{ display:flex; gap:8px; margin-bottom:12px; }
+  .quickadd .inp{ flex:1; }
+  .task-subject-pick{
+    display:flex; gap:5px; flex-wrap:wrap; margin-bottom:12px;
+  }
+  .subj-pill{
+    border:1px solid var(--border); background:var(--card); color:var(--sub);
+    font-size:0.72rem; font-weight:540; padding:5px 11px; border-radius:99px; cursor:pointer; transition:all .12s;
+  }
+  .subj-pill:hover{ background:var(--hover); }
+  .subj-pill.on{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:640; }
+
+  /* 明日計畫 */
+  .tomorrow-card{ border-left:3px solid var(--accent); }
+  .plan-item{
+    display:flex; align-items:center; gap:10px; padding:8px 0; font-size:0.85rem;
+    border-bottom:1px solid var(--border);
+  }
+  .plan-item:last-child{ border-bottom:none; }
+  .plan-dot{ width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+  .plan-dot.exam{ background:var(--danger); }
+  .plan-txt{ flex:1; min-width:0; }
+  .plan-tag{ font-size:0.68rem; color:var(--faint); flex-shrink:0; }
+
+  /* 日曆上的任務標記 */
+  .cal-day .dot.task{ background:var(--accent); }
+  .cal-day.has-items{ background:var(--card2); }
+
+  /* ---------- 記憶卡 ---------- */
+  .fc-toolbar{
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px;
+  }
+  .fc-stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:11px; margin-bottom:16px; }
+  .fc-stat{ background:var(--card2); border-radius:11px; padding:12px 14px; }
+  .fc-stat-v{ font-size:1.3rem; font-weight:720; font-variant-numeric:tabular-nums; line-height:1.2; }
+  .fc-stat-c{ font-size:0.71rem; color:var(--sub); margin-top:1px; }
+  .fc-stat.due .fc-stat-v{ color:var(--accent); }
+  .fc-stat.mastered .fc-stat-v{ color:var(--success); }
+
+  .fc-row{
+    display:flex; align-items:flex-start; gap:12px; padding:12px 14px; border:1px solid var(--border);
+    border-radius:11px; margin-bottom:8px; background:var(--card); transition:border-color .13s;
+  }
+  .fc-row:hover{ border-color:var(--border-strong); }
+  .fc-row-body{ flex:1; min-width:0; }
+  .fc-q{ font-size:0.86rem; font-weight:580; line-height:1.45; word-break:break-word; }
+  .fc-a{ font-size:0.8rem; color:var(--sub); margin-top:4px; line-height:1.5; word-break:break-word; }
+  .fc-row-meta{ display:flex; gap:6px; align-items:center; margin-top:7px; flex-wrap:wrap; }
+  .fc-box{
+    font-size:0.65rem; font-weight:700; padding:2px 7px; border-radius:5px;
+    background:var(--chip); color:var(--sub);
+  }
+  .fc-box.b5{ background:var(--accent-soft); color:var(--accent); }
+  .fc-row-tools{ display:flex; gap:3px; flex-shrink:0; }
+
+  /* 記憶卡複習畫面 */
+  .fc-study{
+    position:fixed; inset:0; z-index:260; background:var(--page);
+    display:none; flex-direction:column; animation:viewIn .22s ease;
+  }
+  .fc-study.on{ display:flex; }
+  .fc-study-top{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:16px 20px; border-bottom:1px solid var(--border); flex-shrink:0;
+  }
+  .fc-progress{ flex:1; max-width:420px; }
+  .fc-progress-t{ font-size:0.74rem; color:var(--sub); margin-bottom:5px; display:flex; justify-content:space-between; }
+  .fc-study-mid{
+    flex:1; display:flex; align-items:center; justify-content:center; padding:24px 20px; min-height:0;
+  }
+  .fc-stage{ perspective:1600px; width:100%; max-width:560px; }
+  .fc-card{
+    position:relative; width:100%; height:300px; transform-style:preserve-3d;
+    transition:transform .55s cubic-bezier(.4,0,.2,1); cursor:pointer;
+  }
+  .fc-card.flipped{ transform:rotateY(180deg); }
+  .fc-face{
+    position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    background:var(--card); border:1px solid var(--border); border-radius:20px;
+    box-shadow:var(--shadow-md); padding:32px 28px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:14px;
+    overflow-y:auto;
+  }
+  .fc-face-back{ transform:rotateY(180deg); background:var(--card2); }
+  .fc-side-tag{
+    position:absolute; top:15px; left:18px; font-size:0.64rem; font-weight:700;
+    letter-spacing:0.08em; color:var(--faint); text-transform:uppercase;
+  }
+  .fc-text{ font-size:1.25rem; font-weight:560; line-height:1.6; word-break:break-word; max-width:100%; }
+  .fc-face-back .fc-text{ font-size:1.1rem; font-weight:500; }
+  .fc-hint{ font-size:0.73rem; color:var(--faint); }
+  .fc-study-bot{
+    padding:16px 20px calc(20px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--border); flex-shrink:0;
+    display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+  }
+  .fc-btn-forgot, .fc-btn-got{ min-width:150px; }
+  .fc-btn-forgot{ border-color:var(--danger-soft); color:var(--danger); }
+  .fc-btn-forgot:hover{ background:var(--danger-soft); }
+  .fc-btn-got{ background:var(--success); border-color:var(--success); color:#fff; font-weight:620; }
+  .fc-btn-got:hover{ filter:brightness(1.08); background:var(--success); }
+  .fc-done-panel{ text-align:center; max-width:380px; }
+  .fc-done-ico{
+    width:64px; height:64px; border-radius:50%; background:var(--accent-soft); color:var(--accent);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 16px;
+  }
+
+  /* ---------- Spotify 懸浮小工具 ---------- */
+  .music-fab{
+    position:fixed; right:20px; bottom:20px; z-index:150;
+    width:50px; height:50px; border-radius:50%; border:1px solid var(--border);
+    background:var(--card); color:var(--accent); box-shadow:var(--shadow-lg);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .16s;
+  }
+  .music-fab:hover{ transform:scale(1.07); }
+  .music-fab.playing{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .music-fab.playing::after{
+    content:""; position:absolute; inset:-4px; border-radius:50%;
+    border:2px solid var(--accent); opacity:0.45; animation:pulse 2s ease-out infinite;
+  }
+  @keyframes pulse{ 0%{ transform:scale(1); opacity:.45; } 100%{ transform:scale(1.28); opacity:0; } }
+
+  .music-panel{
+    position:fixed; right:20px; bottom:80px; z-index:151; width:340px; max-width:calc(100vw - 40px);
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    box-shadow:var(--shadow-lg); overflow:hidden; display:none; animation:modalIn .18s ease;
+  }
+  .music-panel.on{ display:block; }
+  .music-head{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:13px 15px; border-bottom:1px solid var(--border);
+  }
+  .music-title{ font-size:0.85rem; font-weight:650; display:flex; align-items:center; gap:7px; }
+  .music-body{ padding:13px 15px; }
+  .music-presets{ display:flex; gap:5px; flex-wrap:wrap; margin-bottom:11px; }
+  .music-embed{ border-radius:12px; overflow:hidden; background:var(--card2); min-height:80px; }
+  .music-embed iframe{ display:block; width:100%; border:0; }
+  .music-note{ font-size:0.68rem; color:var(--faint); margin-top:10px; line-height:1.5; }
+  .music-empty{ font-size:0.78rem; color:var(--faint); text-align:center; padding:20px 10px; }
+
+  /* ---------- 手機調整（v3） ---------- */
+  @media (max-width:840px){
+    .modal{ max-width:100%; max-height:92vh; border-radius:16px; }
+    .modal-back{ padding:12px; align-items:flex-end; }
+    .fc-card{ height:260px; }
+    .fc-text{ font-size:1.1rem; }
+    .fc-face{ padding:26px 20px; }
+    .fc-btn-forgot, .fc-btn-got{ flex:1; min-width:0; }
+    .music-fab{ right:14px; bottom:calc(74px + env(safe-area-inset-bottom)); width:46px; height:46px; }
+    .music-panel{ right:14px; left:14px; width:auto; bottom:calc(130px + env(safe-area-inset-bottom)); }
+    .fc-stats{ grid-template-columns:repeat(auto-fit,minmax(96px,1fr)); gap:8px; }
+    .fc-stat{ padding:10px 11px; }
+    .fc-stat-v{ font-size:1.1rem; }
+  }
+
 </style>
 <script>
 (function(){
@@ -828,6 +1070,32 @@
             </div>
           </div>
           <div class="examcount-list" id="examCountList"></div>
+        </div>
+      </div>
+
+      <div class="today-grid">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              今日焦點
+            </div>
+            <span class="card-note" id="todayTaskCount"></span>
+          </div>
+          <div id="todayTaskList"></div>
+          <button class="btn" style="width:100%; margin-top:10px;" onclick="openTodayTaskModal()">＋ 新增今日任務</button>
+        </div>
+
+        <div class="card tomorrow-card">
+          <div class="card-head">
+            <div class="card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              明日計畫
+            </div>
+            <span class="card-note">先想好，明天就不焦慮</span>
+          </div>
+          <div id="tomorrowPlan"></div>
+          <button class="btn" style="width:100%; margin-top:10px;" onclick="openTomorrowTaskModal()">＋ 安排明天</button>
         </div>
       </div>
 
@@ -999,6 +1267,7 @@
                 <option value="light">淺色</option>
                 <option value="dark">深色</option>
                 <option value="matcha">抹茶綠</option>
+                <option value="milktea">奶茶（暖色護眼）</option>
               </select>
             </div>
           </div>
@@ -1112,7 +1381,7 @@
     </button>
     <button class="mnav-item" data-view="subjects" onclick="switchView('subjects')">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-      科目
+      <span class="mnav-dot"></span>科目
     </button>
     <button class="mnav-item" data-view="stats" onclick="switchView('stats')">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-4 4"/></svg>
@@ -1155,6 +1424,117 @@
 </div>
 
 <div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ===== 日期 Modal（行事曆雙向操作） ===== -->
+<div class="modal-back" id="dayModalBack" onclick="if(event.target===this) closeDayModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="dayModalTitle"></div>
+        <div class="modal-sub" id="dayModalSub"></div>
+      </div>
+      <button class="modal-x" onclick="closeDayModal()">✕</button>
+    </div>
+    <div class="modal-body" id="dayModalBody"></div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="closeDayModal()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 記憶卡編輯 Modal ===== -->
+<div class="modal-back" id="fcEditBack" onclick="if(event.target===this) closeFcEdit()">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="fcEditTitle">新增記憶卡</div>
+        <div class="modal-sub" id="fcEditSub"></div>
+      </div>
+      <button class="modal-x" onclick="closeFcEdit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-sec">
+        <label class="field-label">正面（問題）</label>
+        <textarea class="inp" id="fcEditQ" placeholder="例如：KVL 的定義是什麼？" style="min-height:84px;"></textarea>
+      </div>
+      <div class="modal-sec">
+        <label class="field-label">背面（答案）</label>
+        <textarea class="inp" id="fcEditA" placeholder="例如：沿任一封閉迴路，各元件電壓的代數和為零" style="min-height:110px;"></textarea>
+      </div>
+      <div class="modal-sec">
+        <label class="field-label">關聯單元（選填，方便之後只複習某一單元）</label>
+        <select class="sel" id="fcEditUnit" style="width:100%;"></select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="closeFcEdit()">取消</button>
+      <button class="btn primary" onclick="saveFcEdit()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 記憶卡複習畫面 ===== -->
+<div class="fc-study" id="fcStudy">
+  <div class="fc-study-top">
+    <button class="btn ghost" onclick="exitFcStudy()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      結束
+    </button>
+    <div class="fc-progress">
+      <div class="fc-progress-t"><span id="fcStudyLabel"></span><span id="fcStudyCount"></span></div>
+      <div class="bar slim"><span id="fcStudyBar" style="width:0%"></span></div>
+    </div>
+    <div style="width:70px;"></div>
+  </div>
+  <div class="fc-study-mid" id="fcStudyMid">
+    <div class="fc-stage">
+      <div class="fc-card" id="fcCard" onclick="flipFc()">
+        <div class="fc-face">
+          <span class="fc-side-tag">問題</span>
+          <div class="fc-text" id="fcFrontText"></div>
+          <div class="fc-hint">點一下卡片看答案</div>
+        </div>
+        <div class="fc-face fc-face-back">
+          <span class="fc-side-tag">答案</span>
+          <div class="fc-text" id="fcBackText"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fc-study-bot" id="fcStudyBot">
+    <button class="btn lg fc-btn-forgot" onclick="answerFc(false)">忘記了</button>
+    <button class="btn lg fc-btn-got" onclick="answerFc(true)">記住了</button>
+  </div>
+</div>
+
+<!-- ===== Spotify 懸浮音樂小工具 ===== -->
+<button class="music-fab" id="musicFab" onclick="toggleMusicPanel()" title="專注音樂">
+  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+</button>
+
+<div class="music-panel" id="musicPanel">
+  <div class="music-head">
+    <div class="music-title">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      專注音樂
+    </div>
+    <button class="modal-x" onclick="toggleMusicPanel()">✕</button>
+  </div>
+  <div class="music-body">
+    <div class="music-presets" id="musicPresets"></div>
+    <div class="music-embed" id="musicEmbed">
+      <div class="music-empty">選一個歌單，或在下方貼上你自己的 Spotify 連結</div>
+    </div>
+    <div style="display:flex; gap:7px; margin-top:11px;">
+      <input type="text" class="inp" id="musicUrlInput" placeholder="貼上 Spotify 歌單連結" style="font-size:0.78rem;">
+      <button class="btn sm" onclick="applyCustomPlaylist()">套用</button>
+    </div>
+    <div class="music-note">
+      需要網路連線。未登入 Spotify 只能播放 30 秒試聽片段；在同一個瀏覽器登入 Spotify 後即可完整播放。
+    </div>
+  </div>
+</div>
+
 
 <script>
 /* ---------- 章節對照表 ---------- */
@@ -1846,6 +2226,7 @@ function renderSubjectDetail(){
 
     <div class="detail-tabs">
       <button class="dtab active" data-tab="units" onclick="switchDetailTab('units')">影片清單 ${total}</button>
+      <button class="dtab" data-tab="cards" onclick="switchDetailTab('cards')">記憶卡${fcStats(key).due? ` <span class="chip accent" style="margin-left:4px;">${fcStats(key).due}</span>`:""}</button>
       <button class="dtab" data-tab="exams" onclick="switchDetailTab('exams')">考試</button>
       <button class="dtab" data-tab="book" onclick="switchDetailTab('book')">教科書</button>
       <button class="dtab" data-tab="notes" onclick="switchDetailTab('notes')">筆記</button>
@@ -1864,6 +2245,10 @@ function renderSubjectDetail(){
       </div>
       <div class="unit-list" id="list-${key}"></div>
       <div class="empty" id="listEmpty-${key}" style="display:none;">沒有符合的影片</div>
+    </div>
+
+    <div class="dpane" id="dpane-cards">
+      <div id="fcPane-${key}"></div>
     </div>
 
     <div class="dpane" id="dpane-exams">
@@ -1887,6 +2272,8 @@ function renderSubjectDetail(){
   buildUnitList(key);
   renderExamBox(key);
   renderStudyStats(key);
+  fcUnitFilter = "all";
+  renderFlashcardPane(key);
 }
 
 function renderBookPane(key, book){
@@ -2170,6 +2557,8 @@ function clearTextbook(key){
   const books = loadSubjectBooks();
   delete books[key];
   saveSubjectBooks(books);
+  cleanupFlashcardsForSubject(key);
+  cleanupTasksForSubject(key);
   renderSubjectDetail();
   switchDetailTab("book");
   renderSubjectGrid();
@@ -2714,6 +3103,8 @@ function renderMonthCalendar(){
   });
   const studyMap = {};
   loadStudyLog().forEach(l=>{ studyMap[l.date] = (studyMap[l.date]||0) + l.minutes; });
+  const taskMap = {};
+  loadTasks().forEach(t=>{ if(!t.done) taskMap[t.date] = (taskMap[t.date]||0) + 1; });
 
   const first = new Date(y, m, 1);
   const startOffset = first.getDay();
@@ -2734,8 +3125,11 @@ function renderMonthCalendar(){
     const isSelected = c.dateStr === selectedCalDay;
     const hasExam = !!examMap[c.dateStr];
     const studyMin = studyMap[c.dateStr] || 0;
-    const meta = (hasExam? `<span class="dot exam"></span>`:"") + (studyMin>0? `<span class="studymin">${studyMin}m</span>`:"");
-    return `<div class="cal-day ${isToday?"today":""} ${isSelected?"selected":""}" onclick="selectCalDay('${c.dateStr}')">
+    const dayTasks = taskMap[c.dateStr] || 0;
+    const meta = (hasExam? `<span class="dot exam"></span>`:"")
+               + (dayTasks? `<span class="dot task"></span>`:"")
+               + (studyMin>0? `<span class="studymin">${studyMin}m</span>`:"");
+    return `<div class="cal-day ${isToday?"today":""} ${isSelected?"selected":""}" onclick="openDayModal('${c.dateStr}')">
       <span class="daynum">${c.dayNum}</span>
       <span class="dots">${meta}</span>
     </div>`;
@@ -3202,6 +3596,9 @@ function renderToday(){
   renderNextUp();
   renderExamCountdown();
   renderReviewDueList();
+  renderTodayTasks();
+  renderTomorrowPlan();
+  renderFcNavBadge();
 }
 
 function renderNextUp(){
@@ -3432,6 +3829,7 @@ function exportData(){
     subjectNotes: loadSubjectNotes(), studyGoals: loadStudyGoals(),
     achievements: loadAchievements(), reviewFlags: loadReviewFlags(),
     subjectBooks: loadSubjectBooks(), reviewInterval: getReviewInterval(),
+    tasks: loadTasks(), flashcards: loadFlashcards(), musicPlaylist: loadMusic(),
   };
   const blob = new Blob([JSON.stringify(bundle,null,2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
@@ -3462,6 +3860,9 @@ function importData(evt){
         if (data.achievements) saveAchievements(data.achievements);
         if (data.reviewFlags) saveReviewFlags(data.reviewFlags);
         if (data.subjectBooks) saveSubjectBooks(data.subjectBooks);
+        if (data.tasks) saveTasks(data.tasks);
+        if (data.flashcards) saveFlashcards(data.flashcards);
+        if (data.musicPlaylist) saveMusic(data.musicPlaylist);
         if (data.reviewInterval) localStorage.setItem(REVIEW_INTERVAL_KEY, String(data.reviewInterval));
       } else {
         state = data;
@@ -3503,6 +3904,597 @@ function initTheme(){
   applyTheme(pref);
   const sel = document.getElementById("themeSelect");
   if (sel) sel.value = pref;
+}
+
+
+/* ============================================================
+   v3：每日任務 / 行事曆雙向操作
+   ============================================================ */
+
+const TASKS_KEY = "tasks_v1";
+
+function loadTasks(){
+  try{ return JSON.parse(localStorage.getItem(TASKS_KEY)) || []; }catch(e){ return []; }
+}
+function saveTasks(list){ localStorage.setItem(TASKS_KEY, JSON.stringify(list)); }
+function tasksFor(dateStr){ return loadTasks().filter(t=>t.date===dateStr); }
+
+function addTask(dateStr, title, subjectKey){
+  title = (title||"").trim();
+  if (!title) return null;
+  const list = loadTasks();
+  const t = {
+    id: "task_" + Date.now() + "_" + Math.random().toString(36).slice(2,5),
+    date: dateStr, title, done:false, subjectKey: subjectKey || null,
+    created: new Date().toISOString().slice(0,10),
+  };
+  list.push(t);
+  saveTasks(list);
+  return t;
+}
+
+function toggleTask(id){
+  const list = loadTasks();
+  const t = list.find(x=>x.id===id);
+  if (!t) return;
+  t.done = !t.done;
+  saveTasks(list);
+  refreshTaskViews();
+  if (t.done) toast("完成一項任務");
+}
+
+function deleteTask(id){
+  saveTasks(loadTasks().filter(t=>t.id!==id));
+  refreshTaskViews();
+}
+
+function cleanupTasksForSubject(key){
+  saveTasks(loadTasks().map(t=> t.subjectKey===key ? Object.assign({}, t, {subjectKey:null}) : t));
+}
+
+function refreshTaskViews(){
+  renderDayModal();
+  renderTodayTasks();
+  renderTomorrowPlan();
+  renderMonthCalendar();
+}
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function tomorrowStr(){ const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); }
+
+function taskRowHtml(t){
+  const subj = t.subjectKey && SUBJECTS[t.subjectKey] ? SUBJECTS[t.subjectKey].name : null;
+  return `<div class="task${t.done?" done":""}">
+    <input type="checkbox" class="task-check" ${t.done?"checked":""} onchange="toggleTask('${t.id}')">
+    <div class="task-body">
+      <div class="task-title">${escapeHtml(t.title)}</div>
+      ${subj? `<div class="task-meta"><span class="chip accent">${escapeHtml(subj)}</span></div>`:""}
+    </div>
+    <button class="task-del" onclick="deleteTask('${t.id}')" title="刪除">✕</button>
+  </div>`;
+}
+
+/* ---------- 日期 Modal ---------- */
+
+let dayModalDate = null;
+let dayModalSubject = null;
+
+function openDayModal(dateStr){
+  if (!dateStr) return;
+  dayModalDate = dateStr;
+  dayModalSubject = null;
+  document.getElementById("dayModalBack").classList.add("on");
+  renderDayModal();
+  setTimeout(()=>document.getElementById("newTaskInput")?.focus(), 80);
+}
+
+function closeDayModal(){
+  document.getElementById("dayModalBack").classList.remove("on");
+  dayModalDate = null;
+}
+
+function renderDayModal(){
+  if (!dayModalDate) return;
+  const back = document.getElementById("dayModalBack");
+  if (!back || !back.classList.contains("on")) return;
+  const d = new Date(dayModalDate + "T00:00:00");
+  const dow = "日一二三四五六"[d.getDay()];
+  const isToday = dayModalDate === todayStr();
+  const isTomorrow = dayModalDate === tomorrowStr();
+  document.getElementById("dayModalTitle").textContent =
+    `${d.getMonth()+1} 月 ${d.getDate()} 日（${dow}）`;
+  document.getElementById("dayModalSub").textContent =
+    isToday ? "今天" : isTomorrow ? "明天" : dayModalDate;
+
+  const exams = [];
+  Object.keys(examDates).forEach(key=>{
+    if (!SUBJECTS[key]) return;
+    (examDates[key]||[]).forEach(ex=>{
+      if (ex.date===dayModalDate) exams.push({key, name:SUBJECTS[key].name, label:ex.label||"考試", scope:ex.scope});
+    });
+  });
+  const studies = loadStudyLog().filter(l=>l.date===dayModalDate);
+  const studyMin = studies.reduce((s,l)=>s+l.minutes,0);
+  const tasks = tasksFor(dayModalDate);
+
+  const pills = Object.keys(SUBJECTS).map(k=>
+    `<button class="subj-pill${dayModalSubject===k?" on":""}" onclick="pickTaskSubject('${k}')">${escapeHtml(SUBJECTS[k].name)}</button>`
+  ).join("");
+
+  document.getElementById("dayModalBody").innerHTML = `
+    <div class="modal-sec">
+      <div class="modal-sec-t">當天任務 ${tasks.length? `（${tasks.filter(t=>t.done).length}/${tasks.length}）`:""}</div>
+      <div class="quickadd">
+        <input type="text" class="inp" id="newTaskInput" placeholder="要做什麼？例如：複習 Ch3 例題"
+               onkeydown="if(event.key==='Enter') submitNewTask()">
+        <button class="btn primary" onclick="submitNewTask()">加入</button>
+      </div>
+      <div class="task-subject-pick">
+        <button class="subj-pill${dayModalSubject===null?" on":""}" onclick="pickTaskSubject(null)">不指定科目</button>
+        ${pills}
+      </div>
+      ${tasks.length ? tasks.map(taskRowHtml).join("") : `<div class="empty" style="padding:18px;">這天還沒有任務</div>`}
+    </div>
+
+    ${exams.length ? `<div class="modal-sec">
+      <div class="modal-sec-t">考試</div>
+      ${exams.map(e=>`<div class="examcount urgent" style="cursor:pointer" onclick="closeDayModal(); openSubject('${e.key}')">
+        <div class="examcount-body">
+          <div class="examcount-name">${escapeHtml(e.name)}・${escapeHtml(e.label)}</div>
+          ${e.scope? `<div class="examcount-meta">範圍：${escapeHtml(e.scope)}</div>`:""}
+        </div>
+      </div>`).join("")}
+    </div>`:""}
+
+    ${studies.length ? `<div class="modal-sec">
+      <div class="modal-sec-t">讀書記錄（共 ${studyMin} 分鐘）</div>
+      ${studies.map(s=>`<div class="plan-item">
+        <span class="plan-dot"></span>
+        <span class="plan-txt">${escapeHtml(SUBJECTS[s.subjectKey]?.name || s.subjectKey)}</span>
+        <span class="plan-tag">${s.minutes} 分鐘</span>
+      </div>`).join("")}
+    </div>`:""}
+  `;
+}
+
+function pickTaskSubject(key){
+  dayModalSubject = key;
+  const val = document.getElementById("newTaskInput")?.value || "";
+  renderDayModal();
+  const inp = document.getElementById("newTaskInput");
+  if (inp){ inp.value = val; inp.focus(); }
+}
+
+function submitNewTask(){
+  const inp = document.getElementById("newTaskInput");
+  if (!inp || !inp.value.trim()) return;
+  addTask(dayModalDate, inp.value, dayModalSubject);
+  inp.value = "";
+  refreshTaskViews();
+  setTimeout(()=>document.getElementById("newTaskInput")?.focus(), 30);
+}
+
+/* ---------- 今日任務 / 明日計畫 ---------- */
+
+function renderTodayTasks(){
+  const el = document.getElementById("todayTaskList");
+  if (!el) return;
+  const tasks = tasksFor(todayStr());
+  const head = document.getElementById("todayTaskCount");
+  if (head) head.textContent = tasks.length ? `${tasks.filter(t=>t.done).length}/${tasks.length} 完成` : "";
+  el.innerHTML = tasks.length
+    ? tasks.map(taskRowHtml).join("")
+    : `<div class="empty" style="padding:22px;"><div class="empty-emo">○</div>今天還沒有安排任務<br>
+       <span style="font-size:0.76rem;">點下方按鈕新增，或到行事曆點任一天規劃</span></div>`;
+}
+
+function renderTomorrowPlan(){
+  const el = document.getElementById("tomorrowPlan");
+  if (!el) return;
+  const ds = tomorrowStr();
+  const tasks = tasksFor(ds);
+  const exams = [];
+  Object.keys(examDates).forEach(key=>{
+    if (!SUBJECTS[key]) return;
+    (examDates[key]||[]).forEach(ex=>{
+      if (ex.date===ds) exams.push({name:SUBJECTS[key].name, label:ex.label||"考試"});
+    });
+  });
+  if (!tasks.length && !exams.length){
+    el.innerHTML = `<div class="empty" style="padding:22px;"><div class="empty-emo">◇</div>明天還沒有安排<br>
+      <span style="font-size:0.76rem;">先想好明天要做什麼，隔天就不用煩惱</span></div>`;
+    return;
+  }
+  el.innerHTML =
+    exams.map(e=>`<div class="plan-item">
+      <span class="plan-dot exam"></span>
+      <span class="plan-txt"><b>${escapeHtml(e.name)}・${escapeHtml(e.label)}</b></span>
+      <span class="plan-tag">考試</span>
+    </div>`).join("") +
+    tasks.map(t=>`<div class="plan-item">
+      <span class="plan-dot"></span>
+      <span class="plan-txt"${t.done?' style="opacity:.5;text-decoration:line-through"':''}>${escapeHtml(t.title)}</span>
+      <span class="plan-tag">${t.subjectKey && SUBJECTS[t.subjectKey] ? escapeHtml(SUBJECTS[t.subjectKey].name) : "任務"}</span>
+    </div>`).join("");
+}
+
+function openTodayTaskModal(){ openDayModal(todayStr()); }
+function openTomorrowTaskModal(){ openDayModal(tomorrowStr()); }
+
+/* ============================================================
+   v3：記憶卡系統（Leitner 間隔重複）
+   ============================================================ */
+
+const FLASHCARDS_KEY = "flashcards_v1";
+const FC_INTERVALS = [1, 2, 4, 7, 14];   // box 1~5 的間隔天數
+
+function loadFlashcards(){
+  try{ return JSON.parse(localStorage.getItem(FLASHCARDS_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveFlashcards(m){ localStorage.setItem(FLASHCARDS_KEY, JSON.stringify(m)); }
+function fcOf(key){ return loadFlashcards()[key] || []; }
+
+function fcIsDue(card){
+  if (!card.due) return true;
+  return todayStr() >= card.due;
+}
+
+function fcNextDue(box){
+  const d = new Date();
+  d.setDate(d.getDate() + FC_INTERVALS[Math.min(box, FC_INTERVALS.length) - 1]);
+  return d.toISOString().slice(0,10);
+}
+
+function fcStats(key){
+  const cards = fcOf(key);
+  return {
+    total: cards.length,
+    due: cards.filter(fcIsDue).length,
+    mastered: cards.filter(c=>(c.box||1) >= 5).length,
+  };
+}
+
+function fcTotalDue(){
+  const m = loadFlashcards();
+  let n = 0;
+  Object.keys(m).forEach(k=>{ if (SUBJECTS[k]) n += m[k].filter(fcIsDue).length; });
+  return n;
+}
+
+function cleanupFlashcardsForSubject(key){
+  const m = loadFlashcards();
+  delete m[key];
+  saveFlashcards(m);
+}
+
+/* 在「科目」導覽項目上顯示待複習卡片數 */
+function renderFcNavBadge(){
+  const n = fcTotalDue();
+  document.querySelectorAll('.nav-item[data-view="subjects"]').forEach(b=>{
+    let badge = b.querySelector(".nav-badge");
+    if (n){
+      if (!badge){ badge = document.createElement("span"); badge.className = "nav-badge"; b.appendChild(badge); }
+      badge.textContent = n;
+      badge.style.background = "var(--accent)";
+    } else if (badge) badge.remove();
+  });
+  document.querySelectorAll('.mnav-item[data-view="subjects"]').forEach(b=> b.classList.toggle("has-badge", n>0));
+}
+
+/* ---------- 記憶卡：科目分頁 ---------- */
+
+let fcUnitFilter = "all";
+
+function renderFlashcardPane(key){
+  const el = document.getElementById("fcPane-"+key);
+  if (!el) return;
+  const cards = fcOf(key);
+  const st = fcStats(key);
+  const units = RAW[key] || [];
+
+  const unitOpts = [`<option value="all">全部單元</option>`]
+    .concat(units.map((it,i)=>`<option value="${it.id}"${fcUnitFilter===it.id?" selected":""}>#${i+1} ${escapeHtml(it.t).slice(0,40)}</option>`))
+    .join("");
+
+  const filtered = fcUnitFilter==="all" ? cards : cards.filter(c=>c.videoId===fcUnitFilter);
+  const filteredDue = filtered.filter(fcIsDue).length;
+
+  el.innerHTML = `
+    <div class="fc-stats">
+      <div class="fc-stat"><div class="fc-stat-v">${st.total}</div><div class="fc-stat-c">總卡數</div></div>
+      <div class="fc-stat due"><div class="fc-stat-v">${st.due}</div><div class="fc-stat-c">今天待複習</div></div>
+      <div class="fc-stat mastered"><div class="fc-stat-v">${st.mastered}</div><div class="fc-stat-c">已精通</div></div>
+    </div>
+
+    <div class="fc-toolbar">
+      <select class="sel" style="flex:1;min-width:170px;" onchange="setFcUnitFilter('${key}', this.value)">${unitOpts}</select>
+      <button class="btn primary" onclick="startFcStudy('${key}','due')" ${filteredDue?"":"disabled"}>
+        複習待複習（${filteredDue}）
+      </button>
+      <button class="btn" onclick="startFcStudy('${key}','all')" ${filtered.length?"":"disabled"}>全部練一遍</button>
+      <button class="btn" onclick="openFcEdit('${key}')">＋ 新增卡片</button>
+    </div>
+
+    ${filtered.length ? filtered.map(c=>{
+      const unitIdx = c.videoId ? units.findIndex(u=>u.id===c.videoId) : -1;
+      const box = c.box || 1;
+      return `<div class="fc-row">
+        <div class="fc-row-body">
+          <div class="fc-q">${escapeHtml(c.q)}</div>
+          <div class="fc-a">${escapeHtml(c.a)}</div>
+          <div class="fc-row-meta">
+            <span class="fc-box${box>=5?" b5":""}">Box ${box}/5</span>
+            ${fcIsDue(c)? `<span class="chip accent">待複習</span>` : `<span class="chip">${escapeHtml(c.due||"")} 再複習</span>`}
+            ${unitIdx>=0? `<span class="chip">#${unitIdx+1} 單元</span>`:""}
+          </div>
+        </div>
+        <div class="fc-row-tools">
+          <button class="icon-btn" onclick="openFcEdit('${key}','${c.id}')" title="編輯">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+          </button>
+          <button class="icon-btn" onclick="deleteFlashcard('${key}','${c.id}')" title="刪除">✕</button>
+        </div>
+      </div>`;
+    }).join("") : `<div class="empty">
+      <div class="empty-emo">▤</div>
+      ${cards.length? "這個單元還沒有記憶卡" : "還沒有記憶卡"}<br>
+      <span style="font-size:0.78rem;">把重要觀念做成問答卡，系統會依照 Leitner 間隔重複幫你排複習時間</span>
+    </div>`}
+  `;
+}
+
+function setFcUnitFilter(key, v){
+  fcUnitFilter = v;
+  renderFlashcardPane(key);
+}
+
+/* ---------- 記憶卡：新增／編輯 ---------- */
+
+let fcEditing = {key:null, id:null};
+
+function openFcEdit(key, id){
+  fcEditing = {key, id: id||null};
+  const card = id ? fcOf(key).find(c=>c.id===id) : null;
+  document.getElementById("fcEditTitle").textContent = id ? "編輯記憶卡" : "新增記憶卡";
+  document.getElementById("fcEditSub").textContent = SUBJECTS[key]?.name || "";
+  document.getElementById("fcEditQ").value = card?.q || "";
+  document.getElementById("fcEditA").value = card?.a || "";
+  const sel = document.getElementById("fcEditUnit");
+  const units = RAW[key] || [];
+  sel.innerHTML = [`<option value="">不指定單元</option>`]
+    .concat(units.map((it,i)=>`<option value="${it.id}"${card?.videoId===it.id?" selected":""}>#${i+1} ${escapeHtml(it.t).slice(0,44)}</option>`))
+    .join("");
+  document.getElementById("fcEditBack").classList.add("on");
+  setTimeout(()=>document.getElementById("fcEditQ").focus(), 80);
+}
+
+function closeFcEdit(){
+  document.getElementById("fcEditBack").classList.remove("on");
+  fcEditing = {key:null, id:null};
+}
+
+function saveFcEdit(){
+  const {key, id} = fcEditing;
+  if (!key) return;
+  const q = document.getElementById("fcEditQ").value.trim();
+  const a = document.getElementById("fcEditA").value.trim();
+  const videoId = document.getElementById("fcEditUnit").value || null;
+  if (!q || !a){ alert("正面與背面都要填寫"); return; }
+  const m = loadFlashcards();
+  if (!m[key]) m[key] = [];
+  if (id){
+    const c = m[key].find(x=>x.id===id);
+    if (c){ c.q=q; c.a=a; c.videoId=videoId; }
+  } else {
+    m[key].push({
+      id: "fc_" + Date.now() + "_" + Math.random().toString(36).slice(2,5),
+      q, a, videoId, box:1, due:todayStr(), created:todayStr(),
+    });
+  }
+  saveFlashcards(m);
+  closeFcEdit();
+  renderFlashcardPane(key);
+  renderToday();
+  toast(id? "記憶卡已更新" : "已新增記憶卡");
+}
+
+function deleteFlashcard(key, id){
+  if (!confirm("確定要刪除這張記憶卡嗎？")) return;
+  const m = loadFlashcards();
+  m[key] = (m[key]||[]).filter(c=>c.id!==id);
+  saveFlashcards(m);
+  renderFlashcardPane(key);
+  renderToday();
+}
+
+/* ---------- 記憶卡：複習流程 ---------- */
+
+let fcQueue = [];
+let fcIndex = 0;
+let fcKey = null;
+let fcFlipped = false;
+let fcSessionRight = 0;
+
+function startFcStudy(key, mode){
+  const all = fcOf(key);
+  let pool = fcUnitFilter==="all" ? all : all.filter(c=>c.videoId===fcUnitFilter);
+  if (mode === "due") pool = pool.filter(fcIsDue);
+  if (!pool.length){ toast("沒有需要複習的卡片"); return; }
+  fcQueue = pool.slice().sort(()=>Math.random()-0.5);
+  fcIndex = 0; fcKey = key; fcFlipped = false; fcSessionRight = 0;
+  document.getElementById("fcStudy").classList.add("on");
+  document.getElementById("fcStudyLabel").textContent = SUBJECTS[key]?.name || "";
+  showFcCard();
+}
+
+function showFcCard(){
+  const card = fcQueue[fcIndex];
+  const el = document.getElementById("fcCard");
+  const mid = document.getElementById("fcStudyMid");
+  const bot = document.getElementById("fcStudyBot");
+  if (!card){
+    mid.innerHTML = `<div class="fc-done-panel">
+      <div class="fc-done-ico">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <div style="font-size:1.2rem;font-weight:680;">這一輪完成了！</div>
+      <div style="color:var(--sub);font-size:0.86rem;margin-top:7px;">
+        答對 ${fcSessionRight} / ${fcQueue.length} 張<br>
+        記住的卡片會排到更久之後再問你，忘記的會很快再出現。
+      </div>
+    </div>`;
+    bot.innerHTML = `<button class="btn lg primary" onclick="exitFcStudy()">回到記憶卡</button>`;
+    document.getElementById("fcStudyCount").textContent = `${fcQueue.length}/${fcQueue.length}`;
+    document.getElementById("fcStudyBar").style.width = "100%";
+    return;
+  }
+  fcFlipped = false;
+  el.classList.remove("flipped");
+  document.getElementById("fcFrontText").textContent = card.q;
+  document.getElementById("fcBackText").textContent = card.a;
+  document.getElementById("fcStudyCount").textContent = `${fcIndex+1}/${fcQueue.length}`;
+  document.getElementById("fcStudyBar").style.width = Math.round(fcIndex/fcQueue.length*100) + "%";
+  bot.style.visibility = "hidden";
+}
+
+function flipFc(){
+  if (!fcQueue[fcIndex]) return;
+  fcFlipped = !fcFlipped;
+  document.getElementById("fcCard").classList.toggle("flipped", fcFlipped);
+  document.getElementById("fcStudyBot").style.visibility = fcFlipped ? "visible" : "hidden";
+}
+
+function answerFc(ok){
+  const card = fcQueue[fcIndex];
+  if (!card) return;
+  const m = loadFlashcards();
+  const stored = (m[fcKey]||[]).find(c=>c.id===card.id);
+  if (stored){
+    const box = stored.box || 1;
+    stored.box = ok ? Math.min(5, box+1) : 1;
+    stored.due = fcNextDue(stored.box);
+    saveFlashcards(m);
+  }
+  if (ok) fcSessionRight++;
+  fcIndex++;
+  showFcCard();
+}
+
+function exitFcStudy(){
+  document.getElementById("fcStudy").classList.remove("on");
+  // 還原複習畫面的原始結構，讓下次可以重新使用
+  document.getElementById("fcStudyMid").innerHTML = `
+    <div class="fc-stage">
+      <div class="fc-card" id="fcCard" onclick="flipFc()">
+        <div class="fc-face">
+          <span class="fc-side-tag">問題</span>
+          <div class="fc-text" id="fcFrontText"></div>
+          <div class="fc-hint">點一下卡片看答案</div>
+        </div>
+        <div class="fc-face fc-face-back">
+          <span class="fc-side-tag">答案</span>
+          <div class="fc-text" id="fcBackText"></div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById("fcStudyBot").innerHTML = `
+    <button class="btn lg fc-btn-forgot" onclick="answerFc(false)">忘記了</button>
+    <button class="btn lg fc-btn-got" onclick="answerFc(true)">記住了</button>`;
+  document.getElementById("fcStudyBot").style.visibility = "hidden";
+  if (fcKey) renderFlashcardPane(fcKey);
+  renderToday();
+  fcQueue = []; fcIndex = 0; fcKey = null;
+}
+
+/* ============================================================
+   v3：Spotify 懸浮音樂小工具
+   ============================================================ */
+
+const MUSIC_KEY = "musicPlaylist_v1";
+const MUSIC_OPEN_KEY = "musicPanelOpen_v1";
+
+const MUSIC_PRESETS = [
+  {name:"深度專注", id:"37i9dQZF1DWZeKCadgRdKQ"},
+  {name:"Lo-Fi",   id:"37i9dQZF1DWWQRwui0ExPn"},
+  {name:"寧靜鋼琴", id:"37i9dQZF1DX4sWSpwq3LiO"},
+  {name:"腦力補給", id:"37i9dQZF1DWXLeA8Omikj7"},
+];
+
+function loadMusic(){
+  try{ return JSON.parse(localStorage.getItem(MUSIC_KEY)) || null; }catch(e){ return null; }
+}
+function saveMusic(m){
+  if (m) localStorage.setItem(MUSIC_KEY, JSON.stringify(m));
+  else localStorage.removeItem(MUSIC_KEY);
+}
+
+function toggleMusicPanel(){
+  const p = document.getElementById("musicPanel");
+  const nowOpen = !p.classList.contains("on");
+  p.classList.toggle("on", nowOpen);
+  localStorage.setItem(MUSIC_OPEN_KEY, nowOpen ? "1" : "0");
+  if (nowOpen) renderMusicPanel();
+}
+
+function renderMusicPanel(){
+  const presets = document.getElementById("musicPresets");
+  const cur = loadMusic();
+  if (presets){
+    presets.innerHTML = MUSIC_PRESETS.map(p=>
+      `<button class="subj-pill${cur && cur.id===p.id ? " on":""}" onclick="setPlaylist('${p.id}','${escapeHtml(p.name)}')">${escapeHtml(p.name)}</button>`
+    ).join("");
+  }
+  const embed = document.getElementById("musicEmbed");
+  if (!embed) return;
+  if (!cur){
+    embed.innerHTML = `<div class="music-empty">選一個歌單，或在下方貼上你自己的 Spotify 連結</div>`;
+    document.getElementById("musicFab")?.classList.remove("playing");
+    return;
+  }
+  const dark = getComputedStyle(document.documentElement).getPropertyValue("--page").trim();
+  embed.innerHTML = `<iframe src="https://open.spotify.com/embed/${cur.type||"playlist"}/${cur.id}?utm_source=generator"
+    width="100%" height="${cur.type==="track"?"152":"352"}" frameborder="0" loading="lazy"
+    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+  document.getElementById("musicFab")?.classList.add("playing");
+}
+
+function setPlaylist(id, name, type){
+  saveMusic({id, name, type: type || "playlist"});
+  renderMusicPanel();
+  toast("已載入：" + name);
+}
+
+function parseSpotifyUrl(url){
+  const m = String(url).match(/open\.spotify\.com\/(?:intl-[a-z-]+\/)?(playlist|album|track|episode|show)\/([A-Za-z0-9]+)/);
+  if (m) return {type:m[1], id:m[2]};
+  const uri = String(url).match(/spotify:(playlist|album|track|episode|show):([A-Za-z0-9]+)/);
+  if (uri) return {type:uri[1], id:uri[2]};
+  return null;
+}
+
+async function applyCustomPlaylist(){
+  const inp = document.getElementById("musicUrlInput");
+  const url = (inp?.value || "").trim();
+  if (!url){ toast("請先貼上 Spotify 連結"); return; }
+  const parsed = parseSpotifyUrl(url);
+  if (!parsed){ toast("看不懂這個連結，請貼 open.spotify.com 的網址"); return; }
+  let name = "自訂歌單";
+  try{
+    const res = await fetch("https://open.spotify.com/oembed?url=" + encodeURIComponent(url));
+    if (res.ok){ const d = await res.json(); if (d.title) name = d.title; }
+  }catch(e){ /* 離線也沒關係，直接套用 */ }
+  saveMusic({id:parsed.id, name, type:parsed.type});
+  if (inp) inp.value = "";
+  renderMusicPanel();
+  toast("已載入：" + name);
+}
+
+function initMusic(){
+  if (localStorage.getItem(MUSIC_OPEN_KEY) === "1"){
+    document.getElementById("musicPanel")?.classList.add("on");
+  }
+  if (loadMusic()) document.getElementById("musicFab")?.classList.add("playing");
+  renderMusicPanel();
 }
 
 /* ---------- 導覽 ---------- */
@@ -3658,11 +4650,20 @@ document.addEventListener("keydown", (e)=>{
   if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="k"){ e.preventDefault(); openCmdk(); return; }
   if (e.key === "Escape"){
     if (document.getElementById("cmdkBack")?.classList.contains("on")) { closeCmdk(); return; }
+    if (document.getElementById("fcEditBack")?.classList.contains("on")) { closeFcEdit(); return; }
+    if (document.getElementById("dayModalBack")?.classList.contains("on")) { closeDayModal(); return; }
+    if (document.getElementById("fcStudy")?.classList.contains("on")) { exitFcStudy(); return; }
     if (document.getElementById("zenMode")?.classList.contains("on")) { exitZen(); return; }
     if (currentSubject && currentView==="subjects"){ closeSubject(); return; }
   }
   if (typing) return;
 
+  if (document.getElementById("fcStudy")?.classList.contains("on")){
+    if (e.code === "Space"){ e.preventDefault(); flipFc(); return; }
+    if (fcFlipped && (e.key==="1" || e.key.toLowerCase()==="j")){ e.preventDefault(); answerFc(false); return; }
+    if (fcFlipped && (e.key==="2" || e.key.toLowerCase()==="k")){ e.preventDefault(); answerFc(true); return; }
+    return;
+  }
   if (e.code === "Space"){ e.preventDefault(); timerStartPause(); return; }
   if (e.key.toLowerCase() === "f"){ e.preventDefault(); document.getElementById("zenMode")?.classList.contains("on") ? exitZen() : enterZen(); return; }
   const views = ["today","subjects","stats","calendar","achievements","settings"];
@@ -3686,6 +4687,7 @@ renderAchievementBadges();
 syncSettingsInputs();
 timerReset();
 checkAchievements(!localStorage.getItem(ACHIEVEMENTS_KEY));
+initMusic();
 </script>
 </body>
 </html>
