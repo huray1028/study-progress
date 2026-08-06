@@ -1,0 +1,18 @@
+{
+  "name": "讀書進度追縱",
+  "short_name": "讀書進度",
+  "description": "追蹤課程影片進度、考試倒數、讀書時間、記憶卡與每日任務的個人學習工具",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#faf8f5",
+  "theme_color": "#5b5bd6",
+  "lang": "zh-Hant",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

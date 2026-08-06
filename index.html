@@ -2,8 +2,20 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>讀書進度追蹤</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>讀書進度追縱</title>
+<meta name="description" content="追蹤課程影片進度、考試倒數、讀書時間、記憶卡與每日任務的個人學習工具">
+
+<!-- PWA：讓手機可以「加到主畫面」，像 App 一樣使用 -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#5b5bd6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#100e12" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="讀書進度">
 <style>
   /* ============ 設計代幣 ============
      2026 配色方向：暖中性底色（oatmeal / putty / greige）取代冷灰，
@@ -906,7 +918,7 @@
     display:flex; align-items:center; justify-content:center; margin:0 auto 16px;
   }
 
-  /* ---------- Spotify 懸浮小工具 ---------- */
+  /* ---------- 音樂懸浮按鈕（面板樣式見 v4 的 .player-panel） ---------- */
   .music-fab{
     position:fixed; right:20px; bottom:20px; z-index:150;
     width:50px; height:50px; border-radius:50%; border:1px solid var(--border);
@@ -921,23 +933,7 @@
   }
   @keyframes pulse{ 0%{ transform:scale(1); opacity:.45; } 100%{ transform:scale(1.28); opacity:0; } }
 
-  .music-panel{
-    position:fixed; right:20px; bottom:80px; z-index:151; width:340px; max-width:calc(100vw - 40px);
-    background:var(--card); border:1px solid var(--border); border-radius:16px;
-    box-shadow:var(--shadow-lg); overflow:hidden; display:none; animation:modalIn .18s ease;
-  }
-  .music-panel.on{ display:block; }
-  .music-head{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    padding:13px 15px; border-bottom:1px solid var(--border);
-  }
   .music-title{ font-size:0.85rem; font-weight:650; display:flex; align-items:center; gap:7px; }
-  .music-body{ padding:13px 15px; }
-  .music-presets{ display:flex; gap:5px; flex-wrap:wrap; margin-bottom:11px; }
-  .music-embed{ border-radius:12px; overflow:hidden; background:var(--card2); min-height:80px; }
-  .music-embed iframe{ display:block; width:100%; border:0; }
-  .music-note{ font-size:0.68rem; color:var(--faint); margin-top:10px; line-height:1.5; }
-  .music-empty{ font-size:0.78rem; color:var(--faint); text-align:center; padding:20px 10px; }
 
   /* ---------- 手機調整（v3） ---------- */
   @media (max-width:840px){
@@ -954,6 +950,204 @@
     .fc-stat-v{ font-size:1.1rem; }
   }
 
+
+  /* ============================================================
+     v4：Bento Grid 版面 / 名言 / 減焦慮工具 / 本機音樂播放器
+     ============================================================ */
+
+  /* ---------- Bento Grid ---------- */
+  .bento{
+    display:grid; grid-template-columns:repeat(4, minmax(0,1fr));
+    gap:14px; align-items:start;
+  }
+  .bento > *{ min-width:0; }
+  .b-span2{ grid-column:span 2; }
+  .b-span3{ grid-column:span 3; }
+  .b-span4{ grid-column:span 4; }
+  .b-tall{ grid-row:span 2; }
+
+  /* squircle 圓角（2026 趨勢：取代死板的直角圓角） */
+  .bento .card, .quote-band, .calm-card{ border-radius:20px; }
+
+  /* ---------- 每日名言橫幅 ---------- */
+  .quote-band{
+    grid-column:span 4;
+    background:linear-gradient(135deg, var(--accent-soft) 0%, transparent 62%), var(--card);
+    border:1px solid var(--border); padding:22px 26px;
+    display:flex; align-items:flex-start; gap:18px; position:relative; overflow:hidden;
+  }
+  .quote-mark{
+    font-size:3.6rem; line-height:0.75; color:var(--accent); opacity:0.22;
+    font-family:Georgia,"Times New Roman",serif; flex-shrink:0; margin-top:4px; user-select:none;
+  }
+  .quote-main{ flex:1; min-width:0; }
+  .quote-text{ font-size:1.06rem; font-weight:520; line-height:1.65; letter-spacing:-0.005em; }
+  .quote-by{ font-size:0.8rem; color:var(--sub); margin-top:9px; }
+  .quote-by b{ color:var(--accent); font-weight:620; }
+  .quote-by span{ color:var(--faint); }
+  .quote-refresh{
+    position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:9px;
+    border:none; background:none; color:var(--faint); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:all .15s;
+  }
+  .quote-refresh:hover{ background:var(--hover); color:var(--accent); transform:rotate(90deg); }
+
+  /* ---------- 減焦慮工具箱 ---------- */
+  .calm-card{
+    background:var(--card); border:1px solid var(--border); padding:20px;
+  }
+  .calm-row{ display:flex; gap:12px; flex-wrap:wrap; }
+  .calm-tile{
+    flex:1; min-width:150px; border:1px solid var(--border); border-radius:15px;
+    padding:15px 16px; background:var(--card2); cursor:pointer; transition:all .16s;
+    display:flex; align-items:center; gap:12px; text-align:left;
+  }
+  .calm-tile:hover{ border-color:var(--accent); background:var(--accent-soft); transform:translateY(-2px); }
+  .calm-ico{
+    width:38px; height:38px; border-radius:12px; flex-shrink:0;
+    background:var(--card); color:var(--accent); display:flex; align-items:center; justify-content:center;
+    box-shadow:var(--shadow-sm);
+  }
+  .calm-t{ font-size:0.86rem; font-weight:620; }
+  .calm-d{ font-size:0.72rem; color:var(--sub); margin-top:2px; line-height:1.4; }
+
+  /* 呼吸練習 */
+  .breathe-back{
+    position:fixed; inset:0; z-index:270; display:none;
+    align-items:center; justify-content:center; flex-direction:column; gap:34px;
+    background:var(--page);
+  }
+  .breathe-back.on{ display:flex; }
+  .breathe-stage{ position:relative; width:260px; height:260px; display:flex; align-items:center; justify-content:center; }
+  .breathe-orb{
+    width:120px; height:120px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--accent), var(--accent2));
+    opacity:0.9; transition:transform 4s cubic-bezier(.4,0,.4,1); will-change:transform;
+  }
+  .breathe-orb.inhale{ transform:scale(1.85); }
+  .breathe-orb.hold{ transform:scale(1.85); }
+  .breathe-orb.exhale{ transform:scale(1); transition-duration:8s; }
+  .breathe-ring{
+    position:absolute; inset:0; border-radius:50%; border:1.5px dashed var(--border-strong); opacity:0.5;
+  }
+  .breathe-phase{ font-size:1.5rem; font-weight:650; letter-spacing:0.04em; }
+  .breathe-count{ font-size:3rem; font-weight:720; font-variant-numeric:tabular-nums; color:var(--accent); line-height:1; }
+  .breathe-hint{ font-size:0.84rem; color:var(--sub); text-align:center; max-width:300px; line-height:1.7; }
+  .breathe-cycles{ font-size:0.76rem; color:var(--faint); }
+
+  /* 心情記錄 */
+  .mood-row{ display:flex; gap:9px; justify-content:space-between; }
+  .mood-btn{
+    flex:1; border:1px solid var(--border); background:var(--card); border-radius:14px;
+    padding:12px 6px; cursor:pointer; transition:all .15s; display:flex;
+    flex-direction:column; align-items:center; gap:6px;
+  }
+  .mood-btn:hover{ border-color:var(--accent); transform:translateY(-2px); }
+  .mood-btn.on{ border-color:var(--accent); background:var(--accent-soft); }
+  .mood-face{ width:28px; height:28px; }
+  .mood-lbl{ font-size:0.68rem; color:var(--sub); font-weight:560; }
+  .mood-btn.on .mood-lbl{ color:var(--accent); font-weight:660; }
+  .mood-recent{ display:flex; gap:4px; margin-top:12px; flex-wrap:wrap; align-items:center; }
+  .mood-chip{
+    width:22px; height:22px; border-radius:7px; display:flex; align-items:center;
+    justify-content:center; background:var(--card2); font-size:0.62rem; font-weight:700;
+  }
+
+  /* 只要 5 分鐘 */
+  .starter-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .starter-btn{
+    flex:1; min-width:88px; border:1px dashed var(--border-strong); background:none;
+    color:var(--sub); border-radius:12px; padding:10px 8px; cursor:pointer;
+    font-size:0.78rem; font-weight:560; transition:all .15s;
+  }
+  .starter-btn:hover{ border-style:solid; border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+  .starter-btn b{ display:block; font-size:1.05rem; font-weight:720; color:var(--text); }
+  .starter-btn:hover b{ color:var(--accent); }
+
+  /* ---------- 本機音樂播放器 ---------- */
+  .player-panel{
+    position:fixed; right:20px; bottom:80px; z-index:151; width:352px; max-width:calc(100vw - 40px);
+    background:color-mix(in srgb, var(--card) 88%, transparent);
+    backdrop-filter:blur(18px) saturate(1.5); -webkit-backdrop-filter:blur(18px) saturate(1.5);
+    border:1px solid var(--border-strong); border-radius:20px;
+    box-shadow:var(--shadow-lg); overflow:hidden; display:none; animation:modalIn .18s ease;
+  }
+  @supports not (backdrop-filter: blur(2px)){ .player-panel{ background:var(--card); } }
+  .player-panel.on{ display:block; }
+  .player-head{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:14px 16px 12px; border-bottom:1px solid var(--border);
+  }
+  .player-body{ padding:14px 16px 16px; }
+  .player-now{ text-align:center; margin-bottom:12px; }
+  .player-title{
+    font-size:0.92rem; font-weight:640; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; margin-bottom:3px;
+  }
+  .player-sub{ font-size:0.72rem; color:var(--faint); }
+  .player-seek{ display:flex; align-items:center; gap:9px; margin-bottom:12px; }
+  .player-time{ font-size:0.66rem; color:var(--faint); font-variant-numeric:tabular-nums; flex-shrink:0; min-width:32px; }
+  .seekbar{
+    flex:1; height:5px; border-radius:99px; background:var(--track); cursor:pointer; position:relative;
+  }
+  .seekbar > span{ display:block; height:100%; border-radius:99px; background:var(--accent); width:0%; pointer-events:none; }
+  .player-ctrls{ display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px; }
+  .pbtn{
+    width:38px; height:38px; border-radius:50%; border:1px solid var(--border); background:var(--card);
+    color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .13s;
+  }
+  .pbtn:hover{ background:var(--hover); border-color:var(--border-strong); }
+  .pbtn.main{
+    width:48px; height:48px; background:var(--accent); border-color:var(--accent); color:var(--accent-ink);
+  }
+  .pbtn.main:hover{ filter:brightness(1.08); background:var(--accent); }
+  .pbtn.on{ color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
+  .player-vol{ display:flex; align-items:center; gap:9px; margin-bottom:12px; }
+  .player-vol input[type=range]{ flex:1; accent-color:var(--accent); height:4px; }
+  .player-list{ max-height:186px; overflow-y:auto; margin:0 -4px; }
+  .ptrack{
+    display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:10px;
+    cursor:pointer; font-size:0.8rem; transition:background .12s;
+  }
+  .ptrack:hover{ background:var(--hover); }
+  .ptrack.playing{ background:var(--accent-soft); color:var(--accent); font-weight:600; }
+  .ptrack-idx{ font-size:0.66rem; color:var(--faint); min-width:18px; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .ptrack-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ptrack-del{
+    width:22px; height:22px; border:none; background:none; color:var(--faint); cursor:pointer;
+    border-radius:6px; flex-shrink:0; opacity:0; font-size:0.72rem;
+  }
+  .ptrack:hover .ptrack-del{ opacity:1; }
+  .ptrack-del:hover{ background:var(--danger-soft); color:var(--danger); }
+  @media (hover:none){ .ptrack-del{ opacity:1; } }
+  .player-empty{ text-align:center; padding:22px 12px; color:var(--faint); font-size:0.79rem; line-height:1.7; }
+  .player-drop{
+    border:1.5px dashed var(--border-strong); border-radius:14px; padding:20px 14px; text-align:center;
+    transition:all .15s; cursor:pointer;
+  }
+  .player-drop:hover, .player-drop.drag{ border-color:var(--accent); background:var(--accent-soft); }
+  .player-note{ font-size:0.67rem; color:var(--faint); margin-top:10px; line-height:1.55; }
+
+  /* ---------- 手機（v4） ---------- */
+  @media (max-width:840px){
+    .bento{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:11px; }
+    .b-span2, .b-span3, .b-span4, .quote-band{ grid-column:span 2; }
+    .b-tall{ grid-row:auto; }
+    .bento .card, .quote-band, .calm-card{ border-radius:16px; }
+    .quote-band{ padding:17px 18px; gap:12px; }
+    .quote-mark{ font-size:2.6rem; }
+    .quote-text{ font-size:0.95rem; }
+    .calm-tile{ min-width:0; flex-basis:100%; }
+    .player-panel{ right:12px; left:12px; width:auto; bottom:calc(128px + env(safe-area-inset-bottom)); border-radius:18px; }
+    .breathe-stage{ width:210px; height:210px; }
+    .breathe-orb{ width:100px; height:100px; }
+    .mood-btn{ padding:10px 4px; }
+    .mood-face{ width:24px; height:24px; }
+  }
+  @media (max-width:430px){
+    .bento{ grid-template-columns:minmax(0,1fr); }
+    .b-span2, .b-span3, .b-span4, .quote-band{ grid-column:span 1; }
+  }
 </style>
 <script>
 (function(){
@@ -1024,8 +1218,22 @@
         <div class="hero-date" id="heroDate"></div>
       </div>
 
-      <div class="today-grid">
-        <div class="focus-card">
+      <div class="bento">
+
+        <!-- 每日名言 -->
+        <div class="quote-band">
+          <div class="quote-mark">&ldquo;</div>
+          <div class="quote-main">
+            <div class="quote-text" id="quoteText"></div>
+            <div class="quote-by" id="quoteBy"></div>
+          </div>
+          <button class="quote-refresh" onclick="shuffleQuote()" title="換一句">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
+
+        <!-- 專注計時器（bento 主區塊） -->
+        <div class="focus-card b-span2 b-tall">
           <div class="focus-modes">
             <button class="mode-btn active" id="modeStopwatchBtn" onclick="setTimerMode('stopwatch')">正計時</button>
             <button class="mode-btn" id="modePomodoroBtn" onclick="setTimerMode('pomodoro')">番茄鐘 25 分</button>
@@ -1042,39 +1250,24 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
             </button>
           </div>
-        </div>
-
-        <div class="today-side">
-          <div class="card goalcard" id="todayGoalCard"></div>
-          <div class="ministat-row" id="todayMiniStats"></div>
-        </div>
-      </div>
-
-      <div class="today-grid">
-        <div class="card">
-          <div class="card-head">
-            <div class="card-title">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              接下來看這部
-            </div>
-            <span class="card-note">每科的下一部未看影片</span>
-          </div>
-          <div class="nextup-list" id="nextUpList"></div>
-        </div>
-
-        <div class="card">
-          <div class="card-head">
-            <div class="card-title">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-              考試倒數
+          <div>
+            <div class="card-note" style="margin-bottom:2px;">還沒準備好？先做一點點就好</div>
+            <div class="starter-row">
+              <button class="starter-btn" onclick="quickStart(5)"><b>5</b>分鐘</button>
+              <button class="starter-btn" onclick="quickStart(10)"><b>10</b>分鐘</button>
+              <button class="starter-btn" onclick="quickStart(15)"><b>15</b>分鐘</button>
             </div>
           </div>
-          <div class="examcount-list" id="examCountList"></div>
         </div>
-      </div>
 
-      <div class="today-grid">
-        <div class="card">
+        <!-- 今日目標 -->
+        <div class="card goalcard b-span2" id="todayGoalCard"></div>
+
+        <!-- 迷你統計 -->
+        <div class="b-span2" id="todayMiniStats"></div>
+
+        <!-- 今日焦點 -->
+        <div class="card b-span2">
           <div class="card-head">
             <div class="card-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
@@ -1086,7 +1279,8 @@
           <button class="btn" style="width:100%; margin-top:10px;" onclick="openTodayTaskModal()">＋ 新增今日任務</button>
         </div>
 
-        <div class="card tomorrow-card">
+        <!-- 明日計畫 -->
+        <div class="card tomorrow-card b-span2">
           <div class="card-head">
             <div class="card-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -1097,16 +1291,75 @@
           <div id="tomorrowPlan"></div>
           <button class="btn" style="width:100%; margin-top:10px;" onclick="openTomorrowTaskModal()">＋ 安排明天</button>
         </div>
-      </div>
 
-      <div class="card" id="todayReviewCard" style="display:none; margin-top:16px;">
-        <div class="card-head">
-          <div class="card-title">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg>
-            該複習了
+        <!-- 接下來看這部 -->
+        <div class="card b-span2">
+          <div class="card-head">
+            <div class="card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              接下來看這部
+            </div>
+          </div>
+          <div class="nextup-list" id="nextUpList"></div>
+        </div>
+
+        <!-- 考試倒數 -->
+        <div class="card b-span2">
+          <div class="card-head">
+            <div class="card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              考試倒數
+            </div>
+          </div>
+          <div class="examcount-list" id="examCountList"></div>
+        </div>
+
+        <!-- 減焦慮工具箱 -->
+        <div class="calm-card b-span4">
+          <div class="card-head">
+            <div class="card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              放鬆一下
+            </div>
+            <span class="card-note">讀書之外，也要照顧自己</span>
+          </div>
+          <div class="calm-row">
+            <button class="calm-tile" onclick="openBreathe()">
+              <div class="calm-ico">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+              </div>
+              <div>
+                <div class="calm-t">深呼吸 4-7-8</div>
+                <div class="calm-d">一分鐘讓心跳慢下來</div>
+              </div>
+            </button>
+            <div class="calm-tile" style="cursor:default; flex-direction:column; align-items:stretch; gap:9px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="calm-ico">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+                </div>
+                <div>
+                  <div class="calm-t">今天心情如何？</div>
+                  <div class="calm-d" id="moodHint">記錄下來，看看讀書怎麼影響你</div>
+                </div>
+              </div>
+              <div class="mood-row" id="moodRow"></div>
+              <div class="mood-recent" id="moodRecent"></div>
+            </div>
           </div>
         </div>
-        <div id="todayReviewList"></div>
+
+        <!-- 待複習 -->
+        <div class="card b-span4" id="todayReviewCard" style="display:none;">
+          <div class="card-head">
+            <div class="card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg>
+              該複習了
+            </div>
+          </div>
+          <div id="todayReviewList"></div>
+        </div>
+
       </div>
     </section>
 
@@ -1250,6 +1503,13 @@
         <div>
           <div class="view-title">設定</div>
           <div class="view-sub">外觀、目標與資料管理</div>
+        </div>
+      </div>
+
+      <div class="settings-sec">
+        <div class="settings-sec-title">手機與安裝</div>
+        <div class="card">
+          <div class="setting-row" id="installRow"></div>
         </div>
       </div>
 
@@ -1507,32 +1767,46 @@
   </div>
 </div>
 
-<!-- ===== Spotify 懸浮音樂小工具 ===== -->
-<button class="music-fab" id="musicFab" onclick="toggleMusicPanel()" title="專注音樂">
+
+<!-- ===== 呼吸練習 ===== -->
+<div class="breathe-back" id="breatheBack">
+  <button class="btn ghost" style="position:absolute; top:22px; right:22px;" onclick="closeBreathe()">結束 (Esc)</button>
+  <div class="breathe-stage">
+    <div class="breathe-ring"></div>
+    <div class="breathe-orb" id="breatheOrb"></div>
+  </div>
+  <div style="text-align:center; display:flex; flex-direction:column; gap:10px; align-items:center;">
+    <div class="breathe-phase" id="breathePhase">準備好了嗎</div>
+    <div class="breathe-count" id="breatheCount">—</div>
+    <div class="breathe-cycles" id="breatheCycles"></div>
+  </div>
+  <div class="breathe-hint" id="breatheHint">
+    4-7-8 呼吸法：吸氣 4 秒、憋氣 7 秒、吐氣 8 秒。<br>
+    做完幾輪，緊繃感通常就會降下來。
+  </div>
+  <div style="display:flex; gap:10px;">
+    <button class="btn lg primary" id="breatheStartBtn" onclick="toggleBreathe()">開始</button>
+  </div>
+</div>
+
+<!-- ===== 本機音樂播放器 ===== -->
+<button class="music-fab" id="musicFab" onclick="togglePlayerPanel()" title="專注音樂">
   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
 </button>
 
-<div class="music-panel" id="musicPanel">
-  <div class="music-head">
+<div class="player-panel" id="playerPanel">
+  <div class="player-head">
     <div class="music-title">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-      專注音樂
+      我的音樂
     </div>
-    <button class="modal-x" onclick="toggleMusicPanel()">✕</button>
-  </div>
-  <div class="music-body">
-    <div class="music-presets" id="musicPresets"></div>
-    <div class="music-embed" id="musicEmbed">
-      <div class="music-empty">選一個歌單，或在下方貼上你自己的 Spotify 連結</div>
-    </div>
-    <div style="display:flex; gap:7px; margin-top:11px;">
-      <input type="text" class="inp" id="musicUrlInput" placeholder="貼上 Spotify 歌單連結" style="font-size:0.78rem;">
-      <button class="btn sm" onclick="applyCustomPlaylist()">套用</button>
-    </div>
-    <div class="music-note">
-      需要網路連線。未登入 Spotify 只能播放 30 秒試聽片段；在同一個瀏覽器登入 Spotify 後即可完整播放。
+    <div style="display:flex; gap:2px;">
+      <button class="modal-x" onclick="pickMusicFiles()" title="加入音樂檔案">＋</button>
+      <button class="modal-x" onclick="togglePlayerPanel()">✕</button>
     </div>
   </div>
+  <div class="player-body" id="playerBody"></div>
+  <input type="file" id="musicFileInput" accept="audio/*" multiple style="display:none;" onchange="handleMusicFiles(event)">
 </div>
 
 
@@ -3202,6 +3476,7 @@ let timerState = { running:false, startTs:null, elapsedMs:0, subjectKey:null, mo
 let timerInterval = null;
 let audioCtx = null;
 const POMODORO_MS = 25*60*1000;
+let timerTargetMs = POMODORO_MS;   // 番茄鐘/自訂倒數的目標長度
 
 function setTimerMode(mode){
   if (timerState.running || timerState.elapsedMs>0){
@@ -3209,6 +3484,7 @@ function setTimerMode(mode){
     return;
   }
   timerState.mode = mode;
+  if (mode === "pomodoro") timerTargetMs = POMODORO_MS;
   updateTimerModeUI();
   updateTimerDisplay();
 }
@@ -3222,11 +3498,11 @@ function updateTimerModeUI(){
 
 function updateTimerDisplay(){
   const elapsed = timerState.running ? (Date.now()-timerState.startTs) : timerState.elapsedMs;
-  if (timerState.mode === "pomodoro" && timerState.running && elapsed >= POMODORO_MS){
+  if (timerState.mode === "pomodoro" && timerState.running && elapsed >= timerTargetMs){
     pomodoroComplete();
     return;
   }
-  const ms = timerState.mode === "pomodoro" ? Math.max(0, POMODORO_MS - elapsed) : elapsed;
+  const ms = timerState.mode === "pomodoro" ? Math.max(0, timerTargetMs - elapsed) : elapsed;
   const totalSec = Math.max(0, Math.floor(ms/1000));
   const h = String(Math.floor(totalSec/3600)).padStart(2,"0");
   const m = String(Math.floor((totalSec%3600)/60)).padStart(2,"0");
@@ -3277,7 +3553,7 @@ function playBeep(){
 function pomodoroComplete(){
   clearInterval(timerInterval);
   timerState.running = false;
-  timerState.elapsedMs = POMODORO_MS;
+  timerState.elapsedMs = timerTargetMs;
   playBeep();
   timerFinish();
 }
@@ -3599,6 +3875,8 @@ function renderToday(){
   renderTodayTasks();
   renderTomorrowPlan();
   renderFcNavBadge();
+  renderQuote();
+  renderMood();
 }
 
 function renderNextUp(){
@@ -3829,7 +4107,7 @@ function exportData(){
     subjectNotes: loadSubjectNotes(), studyGoals: loadStudyGoals(),
     achievements: loadAchievements(), reviewFlags: loadReviewFlags(),
     subjectBooks: loadSubjectBooks(), reviewInterval: getReviewInterval(),
-    tasks: loadTasks(), flashcards: loadFlashcards(), musicPlaylist: loadMusic(),
+    tasks: loadTasks(), flashcards: loadFlashcards(), moods: loadMoods(),
   };
   const blob = new Blob([JSON.stringify(bundle,null,2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
@@ -3862,7 +4140,7 @@ function importData(evt){
         if (data.subjectBooks) saveSubjectBooks(data.subjectBooks);
         if (data.tasks) saveTasks(data.tasks);
         if (data.flashcards) saveFlashcards(data.flashcards);
-        if (data.musicPlaylist) saveMusic(data.musicPlaylist);
+        if (data.moods) saveMoods(data.moods);
         if (data.reviewInterval) localStorage.setItem(REVIEW_INTERVAL_KEY, String(data.reviewInterval));
       } else {
         state = data;
@@ -4406,95 +4684,576 @@ function exitFcStudy(){
   fcQueue = []; fcIndex = 0; fcKey = null;
 }
 
+
 /* ============================================================
-   v3：Spotify 懸浮音樂小工具
+   v4：每日名言
    ============================================================ */
 
-const MUSIC_KEY = "musicPlaylist_v1";
-const MUSIC_OPEN_KEY = "musicPanelOpen_v1";
-
-const MUSIC_PRESETS = [
-  {name:"深度專注", id:"37i9dQZF1DWZeKCadgRdKQ"},
-  {name:"Lo-Fi",   id:"37i9dQZF1DWWQRwui0ExPn"},
-  {name:"寧靜鋼琴", id:"37i9dQZF1DX4sWSpwq3LiO"},
-  {name:"腦力補給", id:"37i9dQZF1DWXLeA8Omikj7"},
+const QUOTES = [
+  {t:"千里之行，始於足下。", a:"老子", s:"《道德經》"},
+  {t:"不積跬步，無以至千里；不積小流，無以成江海。", a:"荀子", s:"《勸學》"},
+  {t:"業精於勤，荒於嬉；行成於思，毀於隨。", a:"韓愈", s:"《進學解》"},
+  {t:"學而不思則罔，思而不學則殆。", a:"孔子", s:"《論語・為政》"},
+  {t:"知之者不如好之者，好之者不如樂之者。", a:"孔子", s:"《論語・雍也》"},
+  {t:"寶劍鋒從磨礪出，梅花香自苦寒來。", a:"《警世賢文》", s:"勤奮篇"},
+  {t:"天才是百分之一的靈感，加上百分之九十九的汗水。", a:"愛迪生", s:"Thomas Edison"},
+  {t:"我沒有失敗，我只是找到了一萬種行不通的方法。", a:"愛迪生", s:"Thomas Edison"},
+  {t:"重要的是不要停止提問。", a:"愛因斯坦", s:"Albert Einstein"},
+  {t:"教育是當一個人忘記在學校所學之後，剩下來的東西。", a:"愛因斯坦", s:"Albert Einstein"},
+  {t:"成功是從失敗走向失敗，而熱情絲毫不減。", a:"邱吉爾", s:"Winston Churchill"},
+  {t:"紀律是目標與成就之間的橋樑。", a:"吉姆・羅恩", s:"Jim Rohn"},
+  {t:"你不必很厲害才能開始，但你必須開始才能很厲害。", a:"齊格・齊格勒", s:"Zig Ziglar"},
+  {t:"行動未必總能帶來快樂，但沒有行動就一定沒有快樂。", a:"迪斯雷利", s:"Benjamin Disraeli"},
+  {t:"種一棵樹最好的時間是二十年前，其次是現在。", a:"諺語", s:""},
+  {t:"慢一點沒關係，重點是不要停下來。", a:"孔子", s:"常見引述"},
+  {t:"我們是重複做的事情所造就的，卓越因此不是行為，而是習慣。", a:"威爾・杜蘭", s:"Will Durant 詮釋亞里斯多德"},
+  {t:"與其詛咒黑暗，不如點亮一支蠟燭。", a:"諺語", s:""},
+  {t:"知識就是力量。", a:"培根", s:"Francis Bacon"},
+  {t:"讀書破萬卷，下筆如有神。", a:"杜甫", s:"《奉贈韋左丞丈》"},
+  {t:"路漫漫其修遠兮，吾將上下而求索。", a:"屈原", s:"《離騷》"},
+  {t:"人生沒有白走的路，每一步都算數。", a:"諺語", s:""},
+  {t:"未來屬於那些相信自己夢想之美的人。", a:"愛蓮娜・羅斯福", s:"Eleanor Roosevelt"},
+  {t:"最困難的事就是開始行動，其餘的只是堅持。", a:"諺語", s:""},
 ];
 
-function loadMusic(){
-  try{ return JSON.parse(localStorage.getItem(MUSIC_KEY)) || null; }catch(e){ return null; }
-}
-function saveMusic(m){
-  if (m) localStorage.setItem(MUSIC_KEY, JSON.stringify(m));
-  else localStorage.removeItem(MUSIC_KEY);
+const QUOTE_OFFSET_KEY = "quoteOffset_v1";
+
+function todayQuoteIndex(){
+  const d = new Date();
+  const seed = d.getFullYear()*10000 + (d.getMonth()+1)*100 + d.getDate();
+  const off = parseInt(localStorage.getItem(QUOTE_OFFSET_KEY) || "0", 10) || 0;
+  return (seed + off) % QUOTES.length;
 }
 
-function toggleMusicPanel(){
-  const p = document.getElementById("musicPanel");
-  const nowOpen = !p.classList.contains("on");
-  p.classList.toggle("on", nowOpen);
-  localStorage.setItem(MUSIC_OPEN_KEY, nowOpen ? "1" : "0");
-  if (nowOpen) renderMusicPanel();
+function renderQuote(){
+  const q = QUOTES[todayQuoteIndex()];
+  const tEl = document.getElementById("quoteText");
+  const bEl = document.getElementById("quoteBy");
+  if (!tEl || !bEl) return;
+  tEl.textContent = q.t;
+  bEl.innerHTML = `— <b>${escapeHtml(q.a)}</b>${q.s? ` <span>${escapeHtml(q.s)}</span>`:""}`;
 }
 
-function renderMusicPanel(){
-  const presets = document.getElementById("musicPresets");
-  const cur = loadMusic();
-  if (presets){
-    presets.innerHTML = MUSIC_PRESETS.map(p=>
-      `<button class="subj-pill${cur && cur.id===p.id ? " on":""}" onclick="setPlaylist('${p.id}','${escapeHtml(p.name)}')">${escapeHtml(p.name)}</button>`
-    ).join("");
+function shuffleQuote(){
+  const cur = parseInt(localStorage.getItem(QUOTE_OFFSET_KEY) || "0", 10) || 0;
+  localStorage.setItem(QUOTE_OFFSET_KEY, String(cur + 1));
+  renderQuote();
+}
+
+/* ============================================================
+   v4：呼吸練習（4-7-8）
+   ============================================================ */
+
+let breatheTimer = null;
+let breatheRunning = false;
+let breatheCycle = 0;
+
+const BREATHE_STEPS = [
+  {phase:"吸氣", sec:4, cls:"inhale"},
+  {phase:"憋住", sec:7, cls:"hold"},
+  {phase:"吐氣", sec:8, cls:"exhale"},
+];
+
+function openBreathe(){
+  document.getElementById("breatheBack").classList.add("on");
+  resetBreathe();
+}
+
+function closeBreathe(){
+  stopBreathe();
+  document.getElementById("breatheBack").classList.remove("on");
+}
+
+function resetBreathe(){
+  breatheRunning = false;
+  breatheCycle = 0;
+  clearInterval(breatheTimer);
+  const orb = document.getElementById("breatheOrb");
+  orb.className = "breathe-orb";
+  document.getElementById("breathePhase").textContent = "準備好了嗎";
+  document.getElementById("breatheCount").textContent = "—";
+  document.getElementById("breatheCycles").textContent = "";
+  document.getElementById("breatheStartBtn").textContent = "開始";
+}
+
+function toggleBreathe(){
+  if (breatheRunning) stopBreathe();
+  else startBreathe();
+}
+
+function stopBreathe(){
+  breatheRunning = false;
+  clearInterval(breatheTimer);
+  document.getElementById("breatheStartBtn").textContent = "繼續";
+  document.getElementById("breathePhase").textContent = "已暫停";
+}
+
+function startBreathe(){
+  breatheRunning = true;
+  document.getElementById("breatheStartBtn").textContent = "暫停";
+  let stepIdx = 0, left = BREATHE_STEPS[0].sec;
+  const orb = document.getElementById("breatheOrb");
+  const phaseEl = document.getElementById("breathePhase");
+  const countEl = document.getElementById("breatheCount");
+  const cycEl = document.getElementById("breatheCycles");
+
+  const applyStep = ()=>{
+    const s = BREATHE_STEPS[stepIdx];
+    orb.className = "breathe-orb " + s.cls;
+    phaseEl.textContent = s.phase;
+    left = s.sec;
+    countEl.textContent = left;
+  };
+  applyStep();
+
+  clearInterval(breatheTimer);
+  breatheTimer = setInterval(()=>{
+    if (!breatheRunning) return;
+    left--;
+    if (left <= 0){
+      stepIdx++;
+      if (stepIdx >= BREATHE_STEPS.length){
+        stepIdx = 0;
+        breatheCycle++;
+        cycEl.textContent = `已完成 ${breatheCycle} 輪`;
+        if (breatheCycle >= 4){
+          clearInterval(breatheTimer);
+          breatheRunning = false;
+          orb.className = "breathe-orb";
+          phaseEl.textContent = "做得很好";
+          countEl.textContent = "✓";
+          document.getElementById("breatheStartBtn").textContent = "再做一輪";
+          breatheCycle = 0;
+          return;
+        }
+      }
+      applyStep();
+    } else {
+      countEl.textContent = left;
+    }
+  }, 1000);
+}
+
+/* ============================================================
+   v4：心情記錄
+   ============================================================ */
+
+const MOOD_KEY = "moodLog_v1";
+const MOOD_DEFS = [
+  {v:1, label:"很累", path:"M8 16s1.5-2 4-2 4 2 4 2"},
+  {v:2, label:"有點累", path:"M8 15h8"},
+  {v:3, label:"還好", path:"M8 14h8"},
+  {v:4, label:"不錯", path:"M8 14s1.5 2 4 2 4-2 4-2"},
+  {v:5, label:"很好", path:"M7 13s2 3 5 3 5-3 5-3"},
+];
+
+function loadMoods(){
+  try{ return JSON.parse(localStorage.getItem(MOOD_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveMoods(m){ localStorage.setItem(MOOD_KEY, JSON.stringify(m)); }
+
+function setMood(v){
+  const m = loadMoods();
+  const d = todayStr();
+  if (m[d] === v) delete m[d]; else m[d] = v;
+  saveMoods(m);
+  renderMood();
+  if (m[d]) toast("已記錄今天的心情");
+}
+
+function moodFaceSvg(def, size){
+  return `<svg class="mood-face" width="${size||26}" height="${size||26}" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <circle cx="12" cy="12" r="9.2"/><path d="M9 9.5h.01M15 9.5h.01"/><path d="${def.path}"/></svg>`;
+}
+
+function renderMood(){
+  const row = document.getElementById("moodRow");
+  if (!row) return;
+  const m = loadMoods();
+  const today = m[todayStr()];
+  row.innerHTML = MOOD_DEFS.map(d=>
+    `<button class="mood-btn${today===d.v?" on":""}" onclick="setMood(${d.v})" title="${d.label}">
+      ${moodFaceSvg(d)}<span class="mood-lbl">${d.label}</span>
+    </button>`).join("");
+
+  const hint = document.getElementById("moodHint");
+  if (hint) hint.textContent = today
+    ? `今天：${MOOD_DEFS.find(d=>d.v===today).label}．點一下可以取消`
+    : "記錄下來，看看讀書怎麼影響你";
+
+  const rec = document.getElementById("moodRecent");
+  if (rec){
+    const days = [];
+    for (let i=6;i>=0;i--){
+      const d = new Date(); d.setDate(d.getDate()-i);
+      const ds = d.toISOString().slice(0,10);
+      days.push({ds, v:m[ds], lbl:"日一二三四五六"[d.getDay()]});
+    }
+    const any = days.some(x=>x.v);
+    rec.innerHTML = any
+      ? `<span style="font-size:0.66rem;color:var(--faint);margin-right:2px;">近 7 天</span>` +
+        days.map(x=>`<span class="mood-chip" title="${x.ds}"
+          style="${x.v? `background:var(--accent-soft);color:var(--accent);`:""}">${x.v||"·"}</span>`).join("")
+      : "";
   }
-  const embed = document.getElementById("musicEmbed");
-  if (!embed) return;
-  if (!cur){
-    embed.innerHTML = `<div class="music-empty">選一個歌單，或在下方貼上你自己的 Spotify 連結</div>`;
-    document.getElementById("musicFab")?.classList.remove("playing");
+}
+
+/* ============================================================
+   v4：低門檻啟動（只做 5 分鐘）
+   ============================================================ */
+
+function quickStart(minutes){
+  const sel = document.getElementById("timerSubjectSelect");
+  if (!timerState.subjectKey && (!sel || !sel.value)){ alert("請先選擇要讀書的科目"); return; }
+  if (timerState.running || timerState.elapsedMs > 0){
+    if (!confirm("目前正在計時，要重新開始一段新的嗎？")) return;
+    timerReset();
+  }
+  timerState.mode = "pomodoro";
+  timerTargetMs = minutes * 60 * 1000;
+  updateTimerModeUI();
+  timerStartPause();
+  toast(`${minutes} 分鐘就好，開始吧`);
+}
+
+/* ============================================================
+   v4：本機音樂播放器（檔案存在你自己的裝置，不會上傳）
+   ============================================================ */
+
+const MUSIC_DB = "studyMusicDB";
+const MUSIC_STORE = "tracks";
+const PLAYER_VOL_KEY = "playerVolume_v1";
+const PLAYER_OPEN_KEY = "playerOpen_v1";
+
+let musicTracks = [];      // {id, name, url}
+let musicIndex = -1;
+let musicAudio = null;
+let musicShuffle = false;
+let musicRepeat = false;
+
+function musicDb(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(MUSIC_DB, 1);
+    req.onupgradeneeded = ()=>{
+      const db = req.result;
+      if (!db.objectStoreNames.contains(MUSIC_STORE)) db.createObjectStore(MUSIC_STORE, {keyPath:"id"});
+    };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+
+async function musicDbAll(){
+  try{
+    const db = await musicDb();
+    return await new Promise((resolve, reject)=>{
+      const tx = db.transaction(MUSIC_STORE, "readonly");
+      const req = tx.objectStore(MUSIC_STORE).getAll();
+      req.onsuccess = ()=>resolve(req.result || []);
+      req.onerror = ()=>reject(req.error);
+    });
+  }catch(e){ return []; }
+}
+
+async function musicDbPut(rec){
+  const db = await musicDb();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(MUSIC_STORE, "readwrite");
+    tx.objectStore(MUSIC_STORE).put(rec);
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = ()=>reject(tx.error);
+  });
+}
+
+async function musicDbDel(id){
+  const db = await musicDb();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(MUSIC_STORE, "readwrite");
+    tx.objectStore(MUSIC_STORE).delete(id);
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = ()=>reject(tx.error);
+  });
+}
+
+function ensureAudio(){
+  if (musicAudio) return musicAudio;
+  musicAudio = new Audio();
+  musicAudio.volume = parseFloat(localStorage.getItem(PLAYER_VOL_KEY) || "0.6");
+  musicAudio.addEventListener("ended", ()=>{
+    if (musicRepeat){ musicAudio.currentTime = 0; musicAudio.play().catch(()=>{}); }
+    else musicNext();
+  });
+  musicAudio.addEventListener("timeupdate", updatePlayerSeek);
+  musicAudio.addEventListener("play", ()=>{ updatePlayerUI(); document.getElementById("musicFab")?.classList.add("playing"); });
+  musicAudio.addEventListener("pause", ()=>{ updatePlayerUI(); document.getElementById("musicFab")?.classList.remove("playing"); });
+  return musicAudio;
+}
+
+function togglePlayerPanel(){
+  const p = document.getElementById("playerPanel");
+  const open = !p.classList.contains("on");
+  p.classList.toggle("on", open);
+  localStorage.setItem(PLAYER_OPEN_KEY, open ? "1" : "0");
+  if (open) renderPlayer();
+}
+
+function pickMusicFiles(){ document.getElementById("musicFileInput")?.click(); }
+
+async function handleMusicFiles(evt){
+  const files = [...(evt.target.files || [])];
+  if (!files.length) return;
+  let added = 0;
+  for (const f of files){
+    if (!f.type.startsWith("audio/")) continue;
+    const id = "trk_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+    try{
+      await musicDbPut({id, name:f.name.replace(/\.[^.]+$/,""), blob:f});
+      musicTracks.push({id, name:f.name.replace(/\.[^.]+$/,""), url:URL.createObjectURL(f)});
+      added++;
+    }catch(e){ /* 單一檔案失敗不影響其他 */ }
+  }
+  evt.target.value = "";
+  renderPlayer();
+  if (added) toast(`已加入 ${added} 首`);
+  else toast("沒有加入任何音檔");
+}
+
+async function removeTrack(id){
+  const i = musicTracks.findIndex(t=>t.id===id);
+  if (i < 0) return;
+  if (musicIndex === i){ ensureAudio().pause(); musicIndex = -1; }
+  else if (musicIndex > i) musicIndex--;
+  URL.revokeObjectURL(musicTracks[i].url);
+  musicTracks.splice(i,1);
+  await musicDbDel(id);
+  renderPlayer();
+}
+
+function musicPlayAt(i){
+  if (i < 0 || i >= musicTracks.length) return;
+  musicIndex = i;
+  const a = ensureAudio();
+  a.src = musicTracks[i].url;
+  a.play().catch(()=>toast("這個檔案無法播放"));
+  renderPlayer();
+}
+
+function musicToggle(){
+  const a = ensureAudio();
+  if (!musicTracks.length) return;
+  if (musicIndex < 0){ musicPlayAt(0); return; }
+  if (a.paused) a.play().catch(()=>{});
+  else a.pause();
+}
+
+function musicNext(){
+  if (!musicTracks.length) return;
+  let n;
+  if (musicShuffle && musicTracks.length > 1){
+    do { n = Math.floor(Math.random()*musicTracks.length); } while (n === musicIndex);
+  } else n = (musicIndex + 1) % musicTracks.length;
+  musicPlayAt(n);
+}
+
+function musicPrev(){
+  if (!musicTracks.length) return;
+  const a = ensureAudio();
+  if (a.currentTime > 3){ a.currentTime = 0; return; }
+  musicPlayAt((musicIndex - 1 + musicTracks.length) % musicTracks.length);
+}
+
+function musicToggleShuffle(){ musicShuffle = !musicShuffle; renderPlayer(); }
+function musicToggleRepeat(){ musicRepeat = !musicRepeat; renderPlayer(); }
+
+function musicSetVolume(v){
+  const a = ensureAudio();
+  a.volume = v;
+  localStorage.setItem(PLAYER_VOL_KEY, String(v));
+}
+
+function musicSeek(evt){
+  const a = ensureAudio();
+  if (!a.duration) return;
+  const bar = evt.currentTarget;
+  const r = bar.getBoundingClientRect();
+  a.currentTime = Math.min(1, Math.max(0, (evt.clientX - r.left)/r.width)) * a.duration;
+}
+
+function fmtTime(sec){
+  if (!isFinite(sec)) return "0:00";
+  const m = Math.floor(sec/60), s = Math.floor(sec%60);
+  return `${m}:${String(s).padStart(2,"0")}`;
+}
+
+function updatePlayerSeek(){
+  const a = musicAudio;
+  if (!a) return;
+  const fill = document.getElementById("seekFill");
+  const cur = document.getElementById("playerCur");
+  const dur = document.getElementById("playerDur");
+  if (fill && a.duration) fill.style.width = (a.currentTime/a.duration*100) + "%";
+  if (cur) cur.textContent = fmtTime(a.currentTime);
+  if (dur) dur.textContent = fmtTime(a.duration);
+}
+
+function updatePlayerUI(){
+  const btn = document.getElementById("playBtn");
+  if (!btn) return;
+  const playing = musicAudio && !musicAudio.paused;
+  btn.innerHTML = playing
+    ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>`
+    : `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"/></svg>`;
+}
+
+function renderPlayer(){
+  const body = document.getElementById("playerBody");
+  if (!body) return;
+  if (!musicTracks.length){
+    body.innerHTML = `
+      <div class="player-drop" id="playerDrop" onclick="pickMusicFiles()">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent); margin-bottom:8px;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 5v13"/>
+        </svg>
+        <div style="font-size:0.85rem; font-weight:600;">加入你自己的音樂</div>
+        <div style="font-size:0.73rem; color:var(--sub); margin-top:4px;">點這裡選檔案，或把音檔拖進來</div>
+      </div>
+      <div class="player-note">
+        音檔只會存在你自己的裝置上（瀏覽器的 IndexedDB），不會上傳到任何地方，下次打開還在。<br>
+        支援 MP3、M4A、WAV、FLAC 等瀏覽器能播的格式。
+      </div>`;
+    const drop = document.getElementById("playerDrop");
+    if (drop){
+      drop.addEventListener("dragover", e=>{ e.preventDefault(); drop.classList.add("drag"); });
+      drop.addEventListener("dragleave", ()=>drop.classList.remove("drag"));
+      drop.addEventListener("drop", e=>{
+        e.preventDefault(); drop.classList.remove("drag");
+        handleMusicFiles({target:{files:e.dataTransfer.files, value:""}});
+      });
+    }
     return;
   }
-  const dark = getComputedStyle(document.documentElement).getPropertyValue("--page").trim();
-  embed.innerHTML = `<iframe src="https://open.spotify.com/embed/${cur.type||"playlist"}/${cur.id}?utm_source=generator"
-    width="100%" height="${cur.type==="track"?"152":"352"}" frameborder="0" loading="lazy"
-    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
-  document.getElementById("musicFab")?.classList.add("playing");
+
+  const cur = musicIndex >= 0 ? musicTracks[musicIndex] : null;
+  const a = ensureAudio();
+  body.innerHTML = `
+    <div class="player-now">
+      <div class="player-title">${cur? escapeHtml(cur.name) : "選一首開始"}</div>
+      <div class="player-sub">${musicTracks.length} 首・存在你的裝置上</div>
+    </div>
+    <div class="player-seek">
+      <span class="player-time" id="playerCur">0:00</span>
+      <div class="seekbar" onclick="musicSeek(event)"><span id="seekFill"></span></div>
+      <span class="player-time" id="playerDur">0:00</span>
+    </div>
+    <div class="player-ctrls">
+      <button class="pbtn${musicShuffle?" on":""}" onclick="musicToggleShuffle()" title="隨機播放">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
+      </button>
+      <button class="pbtn" onclick="musicPrev()" title="上一首">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4"/><rect x="5" y="4" width="2.5" height="16" rx="1"/></svg>
+      </button>
+      <button class="pbtn main" id="playBtn" onclick="musicToggle()"></button>
+      <button class="pbtn" onclick="musicNext()" title="下一首">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20"/><rect x="16.5" y="4" width="2.5" height="16" rx="1"/></svg>
+      </button>
+      <button class="pbtn${musicRepeat?" on":""}" onclick="musicToggleRepeat()" title="單曲循環">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+      </button>
+    </div>
+    <div class="player-vol">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--faint); flex-shrink:0;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+      <input type="range" min="0" max="1" step="0.01" value="${a.volume}" oninput="musicSetVolume(parseFloat(this.value))">
+    </div>
+    <div class="player-list">
+      ${musicTracks.map((t,i)=>`
+        <div class="ptrack${i===musicIndex?" playing":""}" onclick="musicPlayAt(${i})">
+          <span class="ptrack-idx">${i+1}</span>
+          <span class="ptrack-name">${escapeHtml(t.name)}</span>
+          <button class="ptrack-del" onclick="event.stopPropagation(); removeTrack('${t.id}')" title="移除">✕</button>
+        </div>`).join("")}
+    </div>
+    <button class="btn sm" style="width:100%; margin-top:10px;" onclick="pickMusicFiles()">＋ 再加入音樂</button>`;
+  updatePlayerUI();
+  updatePlayerSeek();
 }
 
-function setPlaylist(id, name, type){
-  saveMusic({id, name, type: type || "playlist"});
-  renderMusicPanel();
-  toast("已載入：" + name);
-}
-
-function parseSpotifyUrl(url){
-  const m = String(url).match(/open\.spotify\.com\/(?:intl-[a-z-]+\/)?(playlist|album|track|episode|show)\/([A-Za-z0-9]+)/);
-  if (m) return {type:m[1], id:m[2]};
-  const uri = String(url).match(/spotify:(playlist|album|track|episode|show):([A-Za-z0-9]+)/);
-  if (uri) return {type:uri[1], id:uri[2]};
-  return null;
-}
-
-async function applyCustomPlaylist(){
-  const inp = document.getElementById("musicUrlInput");
-  const url = (inp?.value || "").trim();
-  if (!url){ toast("請先貼上 Spotify 連結"); return; }
-  const parsed = parseSpotifyUrl(url);
-  if (!parsed){ toast("看不懂這個連結，請貼 open.spotify.com 的網址"); return; }
-  let name = "自訂歌單";
+async function initPlayer(){
   try{
-    const res = await fetch("https://open.spotify.com/oembed?url=" + encodeURIComponent(url));
-    if (res.ok){ const d = await res.json(); if (d.title) name = d.title; }
-  }catch(e){ /* 離線也沒關係，直接套用 */ }
-  saveMusic({id:parsed.id, name, type:parsed.type});
-  if (inp) inp.value = "";
-  renderMusicPanel();
-  toast("已載入：" + name);
+    const recs = await musicDbAll();
+    musicTracks = recs.map(r=>({id:r.id, name:r.name, url:URL.createObjectURL(r.blob)}));
+  }catch(e){ musicTracks = []; }
+  if (localStorage.getItem(PLAYER_OPEN_KEY) === "1") document.getElementById("playerPanel")?.classList.add("on");
+  renderPlayer();
 }
 
-function initMusic(){
-  if (localStorage.getItem(MUSIC_OPEN_KEY) === "1"){
-    document.getElementById("musicPanel")?.classList.add("on");
+/* ============================================================
+   v4：PWA（讓手機可以「加到主畫面」，並支援離線使用）
+   ============================================================ */
+
+let deferredInstallPrompt = null;
+
+function initPWA(){
+  // Service Worker 需要 http(s)；直接用 file:// 開啟時會自動略過，其他功能不受影響
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")){
+    navigator.serviceWorker.register("./sw.js").catch(()=>{ /* 註冊失敗不影響使用 */ });
   }
-  if (loadMusic()) document.getElementById("musicFab")?.classList.add("playing");
-  renderMusicPanel();
+
+  window.addEventListener("beforeinstallprompt", (e)=>{
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    renderInstallRow();
+  });
+  window.addEventListener("appinstalled", ()=>{
+    deferredInstallPrompt = null;
+    renderInstallRow();
+    toast("已安裝到主畫面");
+  });
+  renderInstallRow();
+}
+
+function isStandalone(){
+  return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+}
+
+function renderInstallRow(){
+  const el = document.getElementById("installRow");
+  if (!el) return;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  if (isStandalone()){
+    el.innerHTML = `<div class="setting-label">已安裝在主畫面</div>
+      <div class="setting-desc">你正在以 App 模式使用，離線時也能開啟。</div>`;
+    return;
+  }
+  if (deferredInstallPrompt){
+    el.innerHTML = `
+      <div style="flex:1; min-width:200px;">
+        <div class="setting-label">安裝到主畫面</div>
+        <div class="setting-desc">變成像 App 一樣的圖示，開啟更快，離線也能用。</div>
+      </div>
+      <div class="setting-ctl"><button class="btn primary" onclick="doInstall()">安裝</button></div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div style="flex:1; min-width:200px;">
+      <div class="setting-label">加到手機主畫面</div>
+      <div class="setting-desc">
+        ${isIOS
+          ? "iPhone / iPad：用 Safari 開啟這個網址 → 點下方「分享」按鈕 → 選「加入主畫面」。"
+          : "Android Chrome：點右上角選單 → 選「加到主畫面」或「安裝應用程式」。"}
+        ${location.protocol.startsWith("http") ? "" : "<br><b>注意：</b>目前是用檔案方式開啟，要先放到網路上才能安裝。"}
+      </div>
+    </div>`;
+}
+
+async function doInstall(){
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  try{ await deferredInstallPrompt.userChoice; }catch(e){}
+  deferredInstallPrompt = null;
+  renderInstallRow();
 }
 
 /* ---------- 導覽 ---------- */
@@ -4539,6 +5298,7 @@ function syncSettingsInputs(){
   const sel = document.getElementById("themeSelect");
   if (sel) sel.value = localStorage.getItem(THEME_KEY) || "auto";
   updateApiKeyStatus();
+  renderInstallRow();
 }
 
 /* ---------- Toast ---------- */
@@ -4591,6 +5351,10 @@ function buildCmdkIndex(){
     .forEach(([v,label])=> out.push({kind:"前往", text:label, run:()=>switchView(v)}));
   out.push({kind:"動作", text:"開始／暫停計時器", run:()=>timerStartPause()});
   out.push({kind:"動作", text:"進入專注全螢幕", run:()=>enterZen()});
+  out.push({kind:"動作", text:"深呼吸 4-7-8 放鬆一下", run:()=>openBreathe()});
+  out.push({kind:"動作", text:"打開音樂播放器", run:()=>{ const p=document.getElementById("playerPanel"); if(!p.classList.contains("on")) togglePlayerPanel(); }});
+  out.push({kind:"動作", text:"只讀 5 分鐘就好", run:()=>quickStart(5)});
+  out.push({kind:"動作", text:"換一句名言", run:()=>{ shuffleQuote(); switchView("today"); }});
   out.push({kind:"動作", text:"匯出進度備份", run:()=>exportData()});
   Object.keys(SUBJECTS).forEach(key=>{
     out.push({kind:"科目", text:SUBJECTS[key].name, run:()=>openSubject(key)});
@@ -4650,6 +5414,7 @@ document.addEventListener("keydown", (e)=>{
   if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="k"){ e.preventDefault(); openCmdk(); return; }
   if (e.key === "Escape"){
     if (document.getElementById("cmdkBack")?.classList.contains("on")) { closeCmdk(); return; }
+    if (document.getElementById("breatheBack")?.classList.contains("on")) { closeBreathe(); return; }
     if (document.getElementById("fcEditBack")?.classList.contains("on")) { closeFcEdit(); return; }
     if (document.getElementById("dayModalBack")?.classList.contains("on")) { closeDayModal(); return; }
     if (document.getElementById("fcStudy")?.classList.contains("on")) { exitFcStudy(); return; }
@@ -4687,7 +5452,10 @@ renderAchievementBadges();
 syncSettingsInputs();
 timerReset();
 checkAchievements(!localStorage.getItem(ACHIEVEMENTS_KEY));
-initMusic();
+initPlayer();
+renderQuote();
+renderMood();
+initPWA();
 </script>
 </body>
 </html>
