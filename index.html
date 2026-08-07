@@ -4320,6 +4320,30 @@ function addTask(dateStr, title, subjectKey){
   return t;
 }
 
+/* ---------- 選課日期預設提醒（第一次載入時種入一次，之後不會重複新增） ---------- */
+const COURSE_DATES_SEED_KEY = "courseDatesSeeded_v1";
+function seedCourseRegistrationDates(){
+  if (localStorage.getItem(COURSE_DATES_SEED_KEY)) return;
+  [
+    {date:"2026-08-20", title:"初選1開始"},
+    {date:"2026-08-21", title:"初選1截止"},
+    {date:"2026-08-24", title:"初選1結果公布"},
+    {date:"2026-08-25", title:"初選2開始"},
+    {date:"2026-08-26", title:"初選2截止"},
+    {date:"2026-08-27", title:"初選2結果公布"},
+    {date:"2026-08-28", title:"加選1開始"},
+    {date:"2026-08-31", title:"加選1截止"},
+    {date:"2026-09-01", title:"加選1結果公布"},
+    {date:"2026-09-09", title:"加選2開始"},
+    {date:"2026-09-11", title:"加選2截止"},
+    {date:"2026-09-14", title:"加選2結果公布"},
+    {date:"2026-09-15", title:"異常處理開始"},
+    {date:"2026-09-18", title:"異常處理截止"},
+    {date:"2026-09-24", title:"確認選課截止"},
+  ].forEach(s=> addTask(s.date, s.title));
+  localStorage.setItem(COURSE_DATES_SEED_KEY, "1");
+}
+
 function toggleTask(id){
   const list = loadTasks();
   const t = list.find(x=>x.id===id);
@@ -5550,6 +5574,7 @@ document.addEventListener("keydown", (e)=>{
 loadAllCustomSubjectsIntoData();
 applyDeletedBuiltins();
 applySubjectOverridesToData();
+seedCourseRegistrationDates();
 initTheme();
 populateTimerSubjectSelect();
 renderSubjectGrid();
