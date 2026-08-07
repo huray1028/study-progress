@@ -669,26 +669,56 @@
     color:var(--sub); cursor:pointer; display:flex; align-items:center; justify-content:center;
   }
   .navbtn:hover{ background:var(--hover); color:var(--text); }
-  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; align-items:start; }
   .cal-dow{ text-align:center; font-size:0.68rem; color:var(--faint); padding-bottom:6px; font-weight:640; }
+
+  /* iOS 系統行事曆色（跟 iPhone「行事曆」App 一致） */
+  :root{
+    --ios-red:#ff3b30; --ios-orange:#ff9500; --ios-yellow:#ffcc00; --ios-green:#34c759;
+    --ios-mint:#00c7be; --ios-teal:#30b0c7; --ios-blue:#007aff; --ios-indigo:#5856d6;
+    --ios-purple:#af52de; --ios-pink:#ff2d55; --ios-brown:#a2845e;
+  }
+
   .cal-day{
-    aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    border-radius:9px; cursor:pointer; position:relative; font-size:0.8rem; gap:2px;
-    border:1px solid transparent; transition:background .1s;
+    display:flex; flex-direction:column; align-items:center;
+    min-height:70px; padding:4px 3px 5px; border-radius:11px; cursor:pointer; position:relative;
+    font-size:0.8rem; gap:1px; border:1px solid transparent; transition:background .1s;
   }
   .cal-day:hover{ background:var(--hover); }
-  .cal-day.muted{ color:var(--faint); opacity:0.35; cursor:default; }
+  .cal-day.muted{ color:var(--faint); opacity:0.32; cursor:default; min-height:24px; }
   .cal-day.muted:hover{ background:none; }
-  .cal-day .daynum{ width:25px; height:25px; display:flex; align-items:center; justify-content:center; border-radius:50%; }
-  .cal-day.today .daynum{ background:var(--accent); color:var(--accent-ink); font-weight:700; }
-  .cal-day.selected{ border-color:var(--accent); }
-  .cal-day .dots{ display:flex; align-items:center; gap:3px; height:8px; }
-  .cal-day .dot{ width:5px; height:5px; border-radius:50%; flex-shrink:0; }
-  .cal-day .dot.exam{ background:var(--danger); }
-  .cal-day .studymin{ font-size:0.55rem; font-weight:700; color:var(--accent2); line-height:1; }
+  .cal-day .daynum{
+    width:24px; height:24px; display:flex; align-items:center; justify-content:center;
+    border-radius:50%; flex-shrink:0; transition:background .16s var(--spring,ease);
+  }
+  .cal-day.today .daynum{ background:var(--ios-red); color:#fff; font-weight:700; box-shadow:0 2px 6px rgba(255,59,48,0.45); }
+  .cal-day.selected{ background:var(--accent-soft); }
+  .cal-day.selected .daynum{ box-shadow:0 0 0 1.5px var(--accent); }
+
+  .cal-evts{ width:100%; display:flex; flex-direction:column; gap:2px; margin-top:2px; }
+  .cal-evt{
+    display:block; width:100%; font-size:0.55rem; font-weight:640; line-height:1.6;
+    padding:0 4px; border-radius:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    color:#fff; text-align:left;
+  }
+  .cal-evt.exam{ background:var(--ios-red); }
+  .cal-evt.task{ background:var(--ios-indigo); }
+  .cal-evt.study{ background:var(--ios-green); }
+  .cal-evt-more{
+    font-size:0.53rem; color:var(--faint); font-weight:650; text-align:left; padding:0 4px; line-height:1.4;
+  }
+
   .calday-detail{ margin-top:16px; padding-top:14px; border-top:1px solid var(--border); font-size:0.83rem; }
-  .calday-title{ font-weight:650; margin-bottom:7px; }
-  .calday-item{ display:flex; justify-content:space-between; padding:5px 0; color:var(--sub); }
+  .calday-title{ font-weight:650; margin-bottom:9px; }
+  .calday-item{ display:flex; align-items:center; gap:10px; padding:7px 2px; color:var(--sub); }
+  .calday-item-ico{
+    width:24px; height:24px; border-radius:8px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .calday-item-ico.exam{ background:color-mix(in srgb, var(--ios-red) 16%, transparent); color:var(--ios-red); }
+  .calday-item-ico.study{ background:color-mix(in srgb, var(--ios-green) 16%, transparent); color:var(--ios-green); }
+  .calday-item-txt{ flex:1; min-width:0; color:var(--text); font-size:0.84rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .calday-item-val{ font-size:0.76rem; color:var(--sub); flex-shrink:0; }
 
   /* ============ 設定 ============ */
   .settings-sec{ margin-bottom:26px; }
@@ -892,10 +922,6 @@
   .plan-dot.exam{ background:var(--danger); }
   .plan-txt{ flex:1; min-width:0; }
   .plan-tag{ font-size:0.68rem; color:var(--faint); flex-shrink:0; }
-
-  /* 日曆上的任務標記 */
-  .cal-day .dot.task{ background:var(--accent); }
-  .cal-day.has-items{ background:var(--card2); }
 
   /* ---------- 記憶卡 ---------- */
   .fc-toolbar{
@@ -3444,7 +3470,7 @@ function renderMonthCalendar(){
   const studyMap = {};
   loadStudyLog().forEach(l=>{ studyMap[l.date] = (studyMap[l.date]||0) + l.minutes; });
   const taskMap = {};
-  loadTasks().forEach(t=>{ if(!t.done) taskMap[t.date] = (taskMap[t.date]||0) + 1; });
+  loadTasks().forEach(t=>{ if(!t.done) (taskMap[t.date] = taskMap[t.date]||[]).push(t.title); });
 
   const first = new Date(y, m, 1);
   const startOffset = first.getDay();
@@ -3463,15 +3489,25 @@ function renderMonthCalendar(){
     if (c.muted) return `<div class="cal-day muted"><span class="daynum">${c.dayNum}</span></div>`;
     const isToday = c.dateStr === todayStr;
     const isSelected = c.dateStr === selectedCalDay;
-    const hasExam = !!examMap[c.dateStr];
+    const exams = examMap[c.dateStr] || [];
+    const tasks = taskMap[c.dateStr] || [];
     const studyMin = studyMap[c.dateStr] || 0;
-    const dayTasks = taskMap[c.dateStr] || 0;
-    const meta = (hasExam? `<span class="dot exam"></span>`:"")
-               + (dayTasks? `<span class="dot task"></span>`:"")
-               + (studyMin>0? `<span class="studymin">${studyMin}m</span>`:"");
+
+    const events = [
+      ...exams.map(e=>({cls:"exam", text:e.subject})),
+      ...tasks.map(t=>({cls:"task", text:t})),
+    ];
+    if (studyMin > 0) events.push({cls:"study", text:`讀書 ${studyMin} 分`});
+
+    const maxShow = 2;
+    const shown = events.slice(0, maxShow);
+    const extra = events.length - shown.length;
+    const evtHtml = shown.map(e=>`<span class="cal-evt ${e.cls}">${escapeHtml(e.text)}</span>`).join("")
+                  + (extra > 0 ? `<span class="cal-evt-more">還有 ${extra} 項</span>` : "");
+
     return `<div class="cal-day ${isToday?"today":""} ${isSelected?"selected":""}" onclick="openDayModal('${c.dateStr}')">
       <span class="daynum">${c.dayNum}</span>
-      <span class="dots">${meta}</span>
+      <div class="cal-evts">${evtHtml}</div>
     </div>`;
   }).join("");
 
@@ -3506,8 +3542,15 @@ function renderCalDayDetail(){
   if (!exams.length && !studies.length){
     html += `<div class="empty" style="padding:12px;">這天沒有考試或讀書記錄</div>`;
   } else {
-    exams.forEach(e=> html += `<div class="calday-item"><span style="color:var(--danger)">● 考試</span><span>${escapeHtml(e)}</span></div>`);
-    studies.forEach(s=> html += `<div class="calday-item"><span>${escapeHtml(SUBJECTS[s.subjectKey]?.name || s.subjectKey)}</span><span>${s.minutes} 分鐘</span></div>`);
+    exams.forEach(e=> html += `<div class="calday-item">
+      <span class="calday-item-ico exam"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="7.5" x2="12" y2="13"/><line x1="12" y1="16.5" x2="12.01" y2="16.5"/></svg></span>
+      <span class="calday-item-txt">${escapeHtml(e)}</span>
+    </div>`);
+    studies.forEach(s=> html += `<div class="calday-item">
+      <span class="calday-item-ico study"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6.5 12 12 16 14.5"/></svg></span>
+      <span class="calday-item-txt">${escapeHtml(SUBJECTS[s.subjectKey]?.name || s.subjectKey)}</span>
+      <span class="calday-item-val">${s.minutes} 分鐘</span>
+    </div>`);
   }
   el.innerHTML = html;
 }
