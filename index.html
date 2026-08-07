@@ -681,31 +681,31 @@
 
   .cal-day{
     display:flex; flex-direction:column; align-items:center;
-    min-height:70px; padding:4px 3px 5px; border-radius:11px; cursor:pointer; position:relative;
-    font-size:0.8rem; gap:1px; border:1px solid transparent; transition:background .1s;
+    min-height:52px; padding:2px 2px 3px; border-radius:9px; cursor:pointer; position:relative;
+    font-size:0.72rem; gap:0px; border:1px solid transparent; transition:background .1s;
   }
   .cal-day:hover{ background:var(--hover); }
-  .cal-day.muted{ color:var(--faint); opacity:0.32; cursor:default; min-height:24px; }
+  .cal-day.muted{ color:var(--faint); opacity:0.32; cursor:default; min-height:20px; }
   .cal-day.muted:hover{ background:none; }
   .cal-day .daynum{
-    width:24px; height:24px; display:flex; align-items:center; justify-content:center;
-    border-radius:50%; flex-shrink:0; transition:background .16s var(--spring,ease);
+    width:20px; height:20px; display:flex; align-items:center; justify-content:center;
+    border-radius:50%; flex-shrink:0; font-size:0.72rem; transition:background .16s var(--spring,ease);
   }
-  .cal-day.today .daynum{ background:var(--ios-red); color:#fff; font-weight:700; box-shadow:0 2px 6px rgba(255,59,48,0.45); }
+  .cal-day.today .daynum{ background:var(--ios-red); color:#fff; font-weight:700; box-shadow:0 1.5px 4px rgba(255,59,48,0.4); }
   .cal-day.selected{ background:var(--accent-soft); }
-  .cal-day.selected .daynum{ box-shadow:0 0 0 1.5px var(--accent); }
+  .cal-day.selected .daynum{ box-shadow:0 0 0 1.2px var(--accent); }
 
-  .cal-evts{ width:100%; display:flex; flex-direction:column; gap:2px; margin-top:2px; }
+  .cal-evts{ width:100%; display:flex; flex-direction:column; gap:1px; margin-top:1px; }
   .cal-evt{
-    display:block; width:100%; font-size:0.55rem; font-weight:640; line-height:1.6;
-    padding:0 4px; border-radius:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    display:block; width:100%; font-size:0.48rem; font-weight:630; line-height:1.4;
+    padding:0 3px; border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     color:#fff; text-align:left;
   }
   .cal-evt.exam{ background:var(--ios-red); }
   .cal-evt.task{ background:var(--ios-indigo); }
   .cal-evt.study{ background:var(--ios-green); }
   .cal-evt-more{
-    font-size:0.53rem; color:var(--faint); font-weight:650; text-align:left; padding:0 4px; line-height:1.4;
+    font-size:0.46rem; color:var(--faint); font-weight:630; text-align:left; padding:0 3px; line-height:1.2;
   }
 
   .calday-detail{ margin-top:16px; padding-top:14px; border-top:1px solid var(--border); font-size:0.83rem; }
