@@ -702,7 +702,7 @@
     color:#fff; text-align:left;
   }
   .cal-evt.exam{ background:var(--ios-red); }
-  .cal-evt.task{ background:var(--ios-indigo); }
+  .cal-evt.todo{ background:var(--ios-indigo); }
   .cal-evt.study{ background:var(--ios-green); }
   .cal-evt-more{
     font-size:0.46rem; color:var(--faint); font-weight:630; text-align:left; padding:0 3px; line-height:1.2;
@@ -3495,7 +3495,7 @@ function renderMonthCalendar(){
 
     const events = [
       ...exams.map(e=>({cls:"exam", text:e.subject})),
-      ...tasks.map(t=>({cls:"task", text:t})),
+      ...tasks.map(t=>({cls:"todo", text:t})),
     ];
     if (studyMin > 0) events.push({cls:"study", text:`讀書 ${studyMin} 分`});
 
