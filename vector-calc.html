@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>向量微積分查詢卡 · Gradient / Divergence / Curl</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+:root{
+  --bg-deep:#0B1929;
+  --bg-panel:#0F2038;
+  --bg-panel-2:#132846;
+  --grid-line:rgba(127,219,255,0.07);
+  --grid-line-strong:rgba(127,219,255,0.14);
+  --ink-cyan:#7FDBFF;
+  --text-primary:#E9F2F9;
+  --text-muted:#87A2BC;
+  --text-faint:#5A7290;
+  --grad-color:#E8B339;
+  --div-color:#4FD1A5;
+  --curl-color:#FF7A70;
+  --overview-color:#B79CFF;
+  --border-soft:rgba(127,219,255,0.16);
+}
+
+*{box-sizing:border-box;}
+
+html{scroll-behavior:smooth;}
+
+body{
+  margin:0;
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0/28px 28px,
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0/28px 28px,
+    var(--bg-deep);
+  color:var(--text-primary);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei","Segoe UI",sans-serif;
+  min-height:100vh;
+  line-height:1.65;
+}
+
+.mono{
+  font-family:"SF Mono","JetBrains Mono",Consolas,"Courier New",monospace;
+}
+
+/* ===== Top bar ===== */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(11,25,41,0.92);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border-soft);
+  padding:14px 20px;
+}
+.topbar-inner{
+  max-width:980px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.title-row{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.title-row h1{
+  font-size:15px;
+  letter-spacing:0.08em;
+  margin:0;
+  color:var(--ink-cyan);
+  font-weight:600;
+  font-family:"SF Mono","JetBrains Mono",Consolas,monospace;
+}
+.title-row .sub{
+  font-size:11px;
+  color:var(--text-faint);
+  letter-spacing:0.04em;
+}
+
+.search-wrap{
+  position:relative;
+}
+#search{
+  width:100%;
+  background:var(--bg-panel);
+  border:1px solid var(--border-soft);
+  border-radius:6px;
+  padding:10px 14px 10px 38px;
+  color:var(--text-primary);
+  font-size:14px;
+  outline:none;
+  transition:border-color .15s;
+}
+#search:focus{border-color:var(--ink-cyan);}
+#search::placeholder{color:var(--text-faint);}
+.search-icon{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  width:14px;
+  height:14px;
+  color:var(--text-faint);
+  pointer-events:none;
+}
+
+#search-results{
+  display:none;
+  position:absolute;
+  top:calc(100% + 6px);
+  left:0;right:0;
+  background:var(--bg-panel-2);
+  border:1px solid var(--border-soft);
+  border-radius:8px;
+  max-height:340px;
+  overflow-y:auto;
+  box-shadow:0 12px 30px rgba(0,0,0,0.45);
+  z-index:60;
+}
+#search-results.open{display:block;}
+.result-item{
+  padding:10px 14px;
+  border-bottom:1px solid var(--grid-line-strong);
+  cursor:pointer;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+.result-item:last-child{border-bottom:none;}
+.result-item:hover{background:rgba(127,219,255,0.06);}
+.result-tag{
+  font-size:10px;
+  padding:2px 6px;
+  border-radius:4px;
+  font-family:"SF Mono",monospace;
+  white-space:nowrap;
+  margin-top:2px;
+}
+.result-text{font-size:13px;color:var(--text-primary);}
+.result-text .snippet{display:block;font-size:11.5px;color:var(--text-muted);margin-top:2px;}
+.no-result{padding:16px;font-size:13px;color:var(--text-faint);text-align:center;}
+
+/* tabs */
+.tabs{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.tab-btn{
+  border:1px solid var(--border-soft);
+  background:transparent;
+  color:var(--text-muted);
+  padding:7px 14px;
+  border-radius:5px;
+  font-size:12.5px;
+  cursor:pointer;
+  font-family:inherit;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  transition:all .15s;
+}
+.tab-btn .dot{
+  width:7px;height:7px;border-radius:50%;
+  background:currentColor;
+}
+.tab-btn:hover{border-color:var(--ink-cyan);color:var(--text-primary);}
+.tab-btn.active{
+  background:var(--bg-panel-2);
+  color:var(--text-primary);
+  border-color:currentColor;
+}
+
+/* ===== Page container ===== */
+.wrap{max-width:980px;margin:0 auto;padding:28px 20px 80px;}
+
+.intro{
+  font-size:13px;
+  color:var(--text-muted);
+  padding:16px 18px;
+  border:1px dashed var(--border-soft);
+  border-radius:8px;
+  margin-bottom:28px;
+  background:rgba(127,219,255,0.03);
+}
+
+/* ===== overview table ===== */
+.panel{
+  background:var(--bg-panel);
+  border:1px solid var(--border-soft);
+  border-radius:10px;
+  padding:22px 24px;
+  margin-bottom:24px;
+  scroll-margin-top:150px;
+}
+.panel h2{
+  font-size:13px;
+  color:var(--ink-cyan);
+  letter-spacing:0.06em;
+  margin:0 0 16px;
+  font-family:"SF Mono",monospace;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.panel h2::before{
+  content:'';
+  width:3px;height:14px;
+  background:var(--ink-cyan);
+  border-radius:2px;
+}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th,td{
+  text-align:left;
+  padding:9px 10px;
+  border-bottom:1px solid var(--grid-line-strong);
+  vertical-align:top;
+}
+th{
+  color:var(--text-faint);
+  font-weight:500;
+  font-size:11px;
+  letter-spacing:0.03em;
+}
+td{color:var(--text-primary);}
+tr:last-child td{border-bottom:none;}
+.col-grad{color:var(--grad-color);font-weight:600;}
+.col-div{color:var(--div-color);font-weight:600;}
+.col-curl{color:var(--curl-color);font-weight:600;}
+
+/* operator pages */
+.op-page{display:none;}
+.op-page.active{display:block;}
+
+.op-header{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-bottom:22px;
+  padding-bottom:18px;
+  border-bottom:1px solid var(--border-soft);
+}
+.op-icon{
+  width:52px;height:52px;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  border:1px solid currentColor;
+}
+.op-header h1{
+  margin:0;
+  font-size:20px;
+  font-family:"SF Mono",monospace;
+  letter-spacing:0.02em;
+}
+.op-header .op-symbol{font-size:14px;color:var(--text-muted);margin-top:2px;}
+
+.entry{
+  margin-bottom:22px;
+  padding-bottom:20px;
+  border-bottom:1px solid var(--grid-line-strong);
+  scroll-margin-top:150px;
+}
+.entry:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.entry-label{
+  font-size:11px;
+  color:var(--text-faint);
+  letter-spacing:0.08em;
+  font-family:"SF Mono",monospace;
+  margin-bottom:8px;
+  text-transform:uppercase;
+}
+.entry-body{font-size:14px;color:var(--text-primary);}
+.entry-body p{margin:0 0 10px;}
+.entry-body p:last-child{margin-bottom:0;}
+.formula-box{
+  background:var(--bg-panel-2);
+  border:1px solid var(--grid-line-strong);
+  border-radius:6px;
+  padding:16px 18px;
+  margin:10px 0;
+  overflow-x:auto;
+}
+.formula-box.small{padding:10px 14px;font-size:13px;}
+
+ul.meaning-list{margin:8px 0 0;padding-left:18px;}
+ul.meaning-list li{margin-bottom:8px;font-size:13.5px;color:var(--text-primary);}
+ul.meaning-list li b{color:var(--ink-cyan);font-weight:600;}
+
+.subgrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-top:10px;
+}
+@media(max-width:640px){.subgrid{grid-template-columns:1fr;}}
+.subgrid .box{
+  background:var(--bg-panel-2);
+  border:1px solid var(--grid-line-strong);
+  border-radius:6px;
+  padding:12px 14px;
+}
+.subgrid .box .box-title{font-size:11px;color:var(--text-faint);margin-bottom:6px;letter-spacing:0.03em;}
+
+.tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.tag{
+  font-size:11px;
+  padding:4px 9px;
+  border-radius:12px;
+  border:1px solid currentColor;
+  font-family:"SF Mono",monospace;
+}
+
+/* dimension table */
+.dim-row{display:flex;align-items:center;gap:10px;font-size:12.5px;padding:8px 0;border-bottom:1px solid var(--grid-line-strong);}
+.dim-row:last-child{border-bottom:none;}
+.dim-badge{
+  font-family:"SF Mono",monospace;
+  font-size:10px;
+  padding:3px 8px;
+  border-radius:4px;
+  background:var(--bg-panel-2);
+  color:var(--text-muted);
+  flex-shrink:0;
+  min-width:64px;
+  text-align:center;
+}
+.dim-arrow{color:var(--text-faint);}
+
+.mnemonic{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-top:8px;
+}
+@media(max-width:640px){.mnemonic{grid-template-columns:1fr;}}
+.mnem-card{
+  border-radius:8px;
+  padding:14px;
+  border:1px solid currentColor;
+  background:rgba(255,255,255,0.02);
+}
+.mnem-card .mnem-op{font-size:12px;font-family:"SF Mono",monospace;margin-bottom:4px;}
+.mnem-card .mnem-line{font-size:13px;color:var(--text-primary);}
+
+.highlight-flash{
+  animation:flashbg 1.6s ease;
+}
+@keyframes flashbg{
+  0%{background:rgba(127,219,255,0.18);}
+  100%{background:transparent;}
+}
+
+footer{
+  text-align:center;
+  font-size:11px;
+  color:var(--text-faint);
+  padding:30px 0 10px;
+  font-family:"SF Mono",monospace;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="title-row">
+      <h1>∇ VECTOR CALCULUS REFERENCE</h1>
+      <span class="sub">GRADIENT · DIVERGENCE · CURL</span>
+    </div>
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search" type="text" placeholder="查詢關鍵字，例如：行列式、通量、null identity、球座標...">
+      <div id="search-results"></div>
+    </div>
+    <div class="tabs" id="tabs">
+      <button class="tab-btn active" data-target="overview" style="color:var(--overview-color)"><span class="dot"></span>總覽比較</button>
+      <button class="tab-btn" data-target="gradient" style="color:var(--grad-color)"><span class="dot"></span>Gradient 梯度</button>
+      <button class="tab-btn" data-target="divergence" style="color:var(--div-color)"><span class="dot"></span>Divergence 散度</button>
+      <button class="tab-btn" data-target="curl" style="color:var(--curl-color)"><span class="dot"></span>Curl 旋度</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="intro">這是你向量分析筆記整理的查詢卡。上方可以切換分頁瀏覽，也可以直接搜尋關鍵字跳到對應段落。</div>
+
+  <!-- ========== OVERVIEW ========== -->
+  <div class="op-page active" id="page-overview">
+
+    <div class="panel" id="ov-table">
+      <h2>總覽表</h2>
+      <table>
+        <thead>
+          <tr><th></th><th class="col-grad">Gradient</th><th class="col-div">Divergence</th><th class="col-curl">Curl</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>作用對象</td><td>純量場 $V$</td><td>向量場 $\vec A$</td><td>向量場 $\vec A$</td></tr>
+          <tr><td>輸出結果</td><td>向量</td><td>純量</td><td>向量</td></tr>
+          <tr><td>符號</td><td>$\nabla V$</td><td>$\nabla\cdot\vec A$</td><td>$\nabla\times\vec A$</td></tr>
+          <tr><td>對應積分定理</td><td>無（本身是微分結果）</td><td>散度定理（高斯定理）</td><td>斯托克斯定理</td></tr>
+          <tr><td>原始定義類型</td><td>方向導數的極限</td><td>通量密度的極限</td><td>環流密度的極限</td></tr>
+          <tr><td>一句話意涵</td><td>最陡上升方向與速率</td><td>這一點是不是源頭或凹陷</td><td>這一點附近會不會讓東西繞著轉</td></tr>
+          <tr><td>計算方式</td><td>直接偏微分（最簡單）</td><td>直接偏微分後相加</td><td>行列式展開（最複雜）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel" data-search="維度關係 邊界 內部 斯托克斯定理 散度定理 牛頓萊布尼茲 積分定理 對照">
+      <h2>三者的核心邏輯對照（維度遞增關係）</h2>
+      <div class="dim-row">
+        <span class="dim-badge">牛頓-萊布尼茲</span>
+        <span>邊界：點（0維）</span><span class="dim-arrow">→</span><span>內部：線（1維）</span><span class="dim-arrow">→</span><span>算子：一般導數</span>
+      </div>
+      <div class="dim-row">
+        <span class="dim-badge" style="color:var(--curl-color)">斯托克斯定理</span>
+        <span>邊界：線（1維，封閉迴路）</span><span class="dim-arrow">→</span><span>內部：面（2維）</span><span class="dim-arrow">→</span><span>算子：旋度</span>
+      </div>
+      <div class="dim-row">
+        <span class="dim-badge" style="color:var(--div-color)">散度定理</span>
+        <span>邊界：面（2維，封閉曲面）</span><span class="dim-arrow">→</span><span>內部：體（3維）</span><span class="dim-arrow">→</span><span>算子：散度</span>
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:14px;">三個定理都是同一邏輯的不同維度版本：<b style="color:var(--text-primary)">在某個範圍的邊界上量出來的總量，等於這個範圍內部某種微分量的積分總和。</b></p>
+    </div>
+
+    <div class="panel" data-search="null identity 恆等式 旋度的散度 梯度的旋度 保守場 無磁單極">
+      <h2>Null Identity（兩個恆等於零的關係式）</h2>
+      <div class="subgrid">
+        <div class="box">
+          <div class="box-title" style="color:var(--grad-color)">恆等式一</div>
+          <div class="formula-box small">$\nabla\times(\nabla V)=0$</div>
+          <div style="font-size:12.5px;color:var(--text-muted);">梯度場永遠無旋 → 這是保守場（電場、重力場）可以定義位能的數學基礎。</div>
+        </div>
+        <div class="box">
+          <div class="box-title" style="color:var(--div-color)">恆等式二</div>
+          <div class="formula-box small">$\nabla\cdot(\nabla\times\vec A)=0$</div>
+          <div style="font-size:12.5px;color:var(--text-muted);">旋度場永遠無散 → 這是磁場 $\nabla\cdot\vec B=0$（無磁單極）的數學基礎。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" data-search="為0時的名稱 critical point stationary point solenoidal field irrotational field conservative field 螺線場 無旋場 保守場 英文名稱">
+      <h2>算子為 0 時的英文特別名稱</h2>
+      <table>
+        <thead>
+          <tr><th>條件</th><th>英文名稱</th><th>意義</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="col-grad">$\nabla V=0$</td>
+            <td class="mono">critical point<br>stationary point</td>
+            <td>臨界點／駐點；若 $V$ 是位能，也稱 equilibrium point（平衡點）</td>
+          </tr>
+          <tr>
+            <td class="col-div">$\nabla\cdot\vec A=0$</td>
+            <td class="mono">solenoidal field</td>
+            <td>螺線場／無源場，也稱 divergence-free field 或 incompressible field（流體力學脈絡）；磁場 $\vec B$ 永遠是 solenoidal</td>
+          </tr>
+          <tr>
+            <td class="col-curl">$\nabla\times\vec A=0$</td>
+            <td class="mono">irrotational field</td>
+            <td>無旋場，也稱 conservative field（保守場）——無旋場必可寫成某純量場的梯度；靜電場 $\vec E$ 永遠是 irrotational</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel" data-search="記憶口訣 排序 難度 爬坡 冒東西 轉圈">
+      <h2>記憶口訣</h2>
+      <div class="mnemonic">
+        <div class="mnem-card" style="color:var(--grad-color)">
+          <div class="mnem-op">GRADIENT</div>
+          <div class="mnem-line">純量 → 向量，爬坡方向</div>
+        </div>
+        <div class="mnem-card" style="color:var(--div-color)">
+          <div class="mnem-op">DIVERGENCE</div>
+          <div class="mnem-line">向量 → 純量，冒不冒東西</div>
+        </div>
+        <div class="mnem-card" style="color:var(--curl-color)">
+          <div class="mnem-op">CURL</div>
+          <div class="mnem-line">向量 → 向量，轉不轉圈</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== GRADIENT ========== -->
+  <div class="op-page" id="page-gradient">
+    <div class="op-header" style="color:var(--grad-color)">
+      <div class="op-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20 L10 8 L14 14 L21 4"/><circle cx="21" cy="4" r="1.6" fill="currentColor"/></svg>
+      </div>
+      <div>
+        <h1>Gradient 梯度</h1>
+        <div class="op-symbol">$\nabla V$ &nbsp;·&nbsp; 純量場 → 向量</div>
+      </div>
+    </div>
+
+    <div class="entry" data-search="口語定義 最陡上升方向 上坡 速率">
+      <div class="entry-label">口語定義</div>
+      <div class="entry-body"><p>某一點的梯度，是一個向量，指向這個純量場（比如溫度、高度、電位）<b>上升最快的方向</b>，大小代表這個上升速率有多快。</p></div>
+    </div>
+
+    <div class="entry" data-search="原始定義 方向導數 極限">
+      <div class="entry-label">原始定義（方向導數）</div>
+      <div class="entry-body">
+        <div class="formula-box">$$\nabla V\cdot\hat a_\ell=\frac{dV}{d\ell}\Big|_{\max}$$</div>
+        <p>某方向上 $V$ 的變化率，在梯度方向上達到最大值。</p>
+      </div>
+    </div>
+
+    <div class="entry" data-search="卡氏座標公式 計算方式 偏微分">
+      <div class="entry-label">卡氏座標公式 / 計算方式</div>
+      <div class="entry-body">
+        <div class="formula-box">$$\nabla V=\hat a_x\frac{\partial V}{\partial x}+\hat a_y\frac{\partial V}{\partial y}+\hat a_z\frac{\partial V}{\partial z}$$</div>
+        <p>拿純量函數 $V(x,y,z)$，分別對 $x,y,z$ 做偏微分，結果依序當作向量的 $x,y,z$ 分量。不需要行列式，是三者中最單純的計算。</p>
+      </div>
+    </div>
+
+    <div class="entry" data-search="物理意義 地形圖 海拔 溫度場 靜電場 電位">
+      <div class="entry-label">物理意義</div>
+      <div class="entry-body">
+        <ul class="meaning-list">
+          <li><b>地形圖：</b>$V$ = 海拔高度，$\nabla V$ = 最陡上坡方向，大小 = 坡度</li>
+          <li><b>溫度場：</b>$V$ = 溫度，$\nabla V$ = 升溫最快的方向</li>
+          <li><b>靜電場：</b>$\vec E=-\nabla V$，電位下降最快的方向就是電場方向（負號代表電場指向電位降低處）</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="entry" data-search="數學意義 等值面 等高線 垂直">
+      <div class="entry-label">數學意義</div>
+      <div class="entry-body"><p>梯度把「純量場的變化趨勢」轉換成一個向量，包含方向與大小兩種資訊。等值面（等溫線、等高線）上，梯度永遠垂直於等值面。</p></div>
+    </div>
+
+    <div class="entry" data-search="跟另外兩者的關聯 保守場 旋度為零">
+      <div class="entry-label">跟另外兩者的關聯</div>
+      <div class="entry-body">
+        <div class="formula-box small">$\nabla\times(\nabla V)=0$（null identity 之一）</div>
+        <p>梯度場永遠無旋，代表梯度場是保守場（conservative field），繞封閉路徑一圈作功為 0。</p>
+        <div class="tag-row">
+          <span class="tag" style="color:var(--grad-color)">保守場</span>
+          <span class="tag" style="color:var(--grad-color)">無旋</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== DIVERGENCE ========== -->
+  <div class="op-page" id="page-divergence">
+    <div class="op-header" style="color:var(--div-color)">
+      <div class="op-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1.8" fill="currentColor"/><line x1="12" y1="12" x2="12" y2="3"/><line x1="12" y1="12" x2="19.5" y2="7"/><line x1="12" y1="12" x2="19.5" y2="17"/><line x1="12" y1="12" x2="12" y2="21"/><line x1="12" y1="12" x2="4.5" y2="17"/><line x1="12" y1="12" x2="4.5" y2="7"/></svg>
+      </div>
+      <div>
+        <h1>Divergence 散度</h1>
+        <div class="op-symbol">$\nabla\cdot\vec A$ &nbsp;·&nbsp; 向量場 → 純量</div>
+      </div>
+    </div>
+
+    <div class="entry" data-search="口語定義 源頭 凹陷 冒東西 吸東西">
+      <div class="entry-label">口語定義</div>
+      <div class="entry-body"><p>某一點的散度，是一個純量，代表這一點是不是「源頭」（往外冒東西，正值）或「凹陷」（往內吸東西，負值）。數值大小代表冒出/吸入的強度。</p></div>
+    </div>
+
+    <div class="entry" data-search="原始定義 通量密度 極限 封閉曲面">
+      <div class="entry-label">原始定義（通量密度）</div>
+      <div class="entry-body">
+        <div class="formula-box">$$\nabla\cdot\vec A=\lim_{\Delta V\to0}\frac{\oint_S\vec A\cdot d\vec S}{\Delta V}$$</div>
+        <p>一個無窮小封閉曲面的淨通量，除以體積，取極限。</p>
+      </div>
+    </div>
+
+    <div class="entry" data-search="卡氏座標公式 計算方式">
+      <div class="entry-label">卡氏座標公式</div>
+      <div class="entry-body">
+        <div class="formula-box">$$\nabla\cdot\vec A=\frac{\partial A_x}{\partial x}+\frac{\partial A_y}{\partial y}+\frac{\partial A_z}{\partial z}$$</div>
+        <p>$A_x$ 對 $x$ 微分、$A_y$ 對 $y$ 微分、$A_z$ 對 $z$ 微分，三項加起來。不需要行列式。</p>
+      </div>
+    </div>
+
+    <div class="entry" data-search="推導邏輯 長方體 六個面 通量">
+      <div class="entry-label">推導邏輯（簡述）</div>
+      <div class="entry-body"><p>以某點為中心畫一個無窮小長方體，六個面兩兩一組。每一對面，右（前/上）面的值減左（後/下）面的值，除以邊長，取極限就是偏導數。三個方向獨立算完直接相加——因為通量本質是法向量往外穿出曲面，同方向的分量自己變化多少就直接算多少，不需要跟其他方向互相牽制。</p></div>
+    </div>
+
+    <div class="entry" data-search="柱座標 球座標 尺度因子">
+      <div class="entry-label">柱座標 / 球座標版本</div>
+      <div class="entry-body">
+        <div class="subgrid">
+          <div class="box">
+            <div class="box-title">柱座標</div>
+            <div class="formula-box small">$$\nabla\cdot\vec A=\frac{1}{r}\frac{\partial(rA_r)}{\partial r}+\frac{1}{r}\frac{\partial A_\phi}{\partial\phi}+\frac{\partial A_z}{\partial z}$$</div>
+          </div>
+          <div class="box">
+            <div class="box-title">球座標</div>
+            <div class="formula-box small">$$\nabla\cdot\vec A=\frac{1}{R^2}\frac{\partial(R^2A_R)}{\partial R}+\frac{1}{R\sin\theta}\frac{\partial(\sin\theta A_\theta)}{\partial\theta}+\frac{1}{R\sin\theta}\frac{\partial A_\phi}{\partial\phi}$$</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="entry" data-search="物理意義 流體 湧泉 排水孔 高斯定律 電荷密度 磁單極">
+      <div class="entry-label">物理意義</div>
+      <div class="entry-body">
+        <ul class="meaning-list">
+          <li><b>流體力學：</b>$\vec A$ = 流速場，$\nabla\cdot\vec A>0$ 代表這裡有「湧泉」，$<0$ 代表「排水孔」，$=0$ 代表不可壓縮流</li>
+          <li><b>靜電場：</b>$\nabla\cdot\vec E=\rho/\epsilon_0$（高斯定律微分形式），電荷密度 $\rho$ 是電場線的源頭</li>
+          <li><b>磁場：</b>$\nabla\cdot\vec B=0$ 恆成立，因為沒有磁單極，磁力線永遠閉合</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="entry" data-search="數學意義 發散程度 純量">
+      <div class="entry-label">數學意義</div>
+      <div class="entry-body"><p>散度衡量向量場在某一點的「發散程度」，是純量（沒有方向性），因為通量本質上不分方向，只問淨流出多少。</p></div>
+    </div>
+
+    <div class="entry" data-search="散度定理 高斯定理 積分定理">
+      <div class="entry-label">對應的積分定理：散度定理（高斯定理）</div>
+      <div class="entry-body">
+        <div class="formula-box">$$\oint_S\vec A\cdot d\vec S=\int_V(\nabla\cdot\vec A)\,dV$$</div>
+        <p>封閉曲面的淨通量，等於內部散度的體積分總和——邊界（2維曲面）上量到的東西，等於內部（3維體積）微分量的積分。</p>
+      </div>
+    </div>
+
+    <div class="entry" data-search="跟另外兩者的關聯 旋度場無散">
+      <div class="entry-label">跟另外兩者的關聯</div>
+      <div class="entry-body">
+        <div class="formula-box small">$\nabla\cdot(\nabla\times\vec A)=0$（null identity 之二）</div>
+        <p>旋度場永遠無散，因為旋度場天生是閉合迴圈（像磁力線），沒有起點終點，自然沒有淨的冒出或吸入。</p>
+        <div class="tag-row"><span class="tag" style="color:var(--div-color)">閉合迴圈</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== CURL ========== -->
+  <div class="op-page" id="page-curl">
+    <div class="op-header" style="color:var(--curl-color)">
+      <div class="op-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 1 1 3 6.2"/><path d="M4 18v-5h5"/></svg>
+      </div>
+      <div>
+        <h1>Curl 旋度</h1>
+        <div class="op-symbol">$\nabla\times\vec A$ &nbsp;·&nbsp; 向量場 → 向量</div>
+      </div>
+    </div>
+
+    <div class="entry" data-search="口語定義 紙風車 轉軸 右手定則">
+      <div class="entry-label">口語定義</div>
+      <div class="entry-body"><p>某一點的旋度，是一個向量，代表這一點附近的場會不會讓一個小紙風車轉起來。轉軸方向就是旋度向量的方向（右手定則：四指順著轉動方向彎，拇指指的就是旋度方向），轉得越快，旋度大小越大。</p></div>
+    </div>
+
+    <div class="entry" data-search="原始定義 環流密度 極限 迴路">
+      <div class="entry-label">原始定義（環流密度）</div>
+      <div class="entry-body">
+        <div class="formula-box">$$(\nabla\times\vec A)_u=\lim_{\Delta S\to0}\frac{\oint_C\vec A\cdot d\vec\ell}{\Delta S_u}$$</div>
+        <p>某方向 $u$ 的旋度分量，是垂直於 $u$ 方向的一個無窮小迴路，其環流量除以迴路面積，取極限。</p>
+      </div>
+    </div>
+
+    <div class="entry" data-search="卡氏座標公式 行列式 展開">
+      <div class="entry-label">卡氏座標公式（行列式形式）</div>
+      <div class="entry-body">
+        <div class="formula-box">$$\nabla\times\vec A=\begin{vmatrix}\hat a_x&\hat a_y&\hat a_z\\ \dfrac{\partial}{\partial x}&\dfrac{\partial}{\partial y}&\dfrac{\partial}{\partial z}\\ A_x&A_y&A_z\end{vmatrix}$$</div>
+        <p>展開後：</p>
+        <div class="formula-box">$$\nabla\times\vec A=\hat a_x\Big(\frac{\partial A_z}{\partial y}-\frac{\partial A_y}{\partial z}\Big)+\hat a_y\Big(\frac{\partial A_x}{\partial z}-\frac{\partial A_z}{\partial x}\Big)+\hat a_z\Big(\frac{\partial A_y}{\partial x}-\frac{\partial A_x}{\partial y}\Big)$$</div>
+      </div>
+    </div>
+
+    <div class="entry" data-search="推導邏輯 y-z平面 相減 相消">
+      <div class="entry-label">推導邏輯（簡述，以 x 分量為例）</div>
+      <div class="entry-body"><p>要算 x 分量，迴路要畫在垂直於 x 的平面，也就是 y-z 平面上。迴路四邊分兩組：一組平行 z 軸的邊（涉及 $A_z$ 隨 $y$ 的變化）、一組平行 y 軸的邊（涉及 $A_y$ 隨 $z$ 的變化）。兩組貢獻方向相反，相減後除以面積 $\Delta y\Delta z$，取極限得到 $\partial A_z/\partial y-\partial A_y/\partial z$。這跟散度不同的地方在於：旋度是「不同方向」的分量互相牽制、相減，因為環流本質是切向量繞圈，需要兩個方向的變化互相配合才轉得起來。</p></div>
+    </div>
+
+    <div class="entry" data-search="柱座標 球座標 尺度因子 除以r 除以Rsin">
+      <div class="entry-label">柱座標 / 球座標版本</div>
+      <div class="entry-body">
+        <div class="subgrid">
+          <div class="box">
+            <div class="box-title">柱座標</div>
+            <div class="formula-box small">$$\nabla\times\vec A=\frac{1}{r}\begin{vmatrix}\hat a_r&r\hat a_\phi&\hat a_z\\ \dfrac{\partial}{\partial r}&\dfrac{\partial}{\partial\phi}&\dfrac{\partial}{\partial z}\\ A_r&rA_\phi&A_z\end{vmatrix}$$</div>
+          </div>
+          <div class="box">
+            <div class="box-title">球座標</div>
+            <div class="formula-box small">$$\nabla\times\vec A=\frac{1}{R^2\sin\theta}\begin{vmatrix}\hat a_R&R\hat a_\theta&R\sin\theta\,\hat a_\phi\\ \dfrac{\partial}{\partial R}&\dfrac{\partial}{\partial\theta}&\dfrac{\partial}{\partial\phi}\\ A_R&RA_\theta&R\sin\theta\,A_\phi\end{vmatrix}$$</div>
+          </div>
+        </div>
+        <p style="margin-top:10px;">前面的係數 $1/r$、$1/(R^2\sin\theta)$，是該座標系「非直線距離」座標換算回實際弧長需要乘的尺度因子乘積，跟體積或表面積無關。</p>
+      </div>
+    </div>
+
+    <div class="entry" data-search="物理意義 渦旋 安培定律 電流密度 靜電場無旋">
+      <div class="entry-label">物理意義</div>
+      <div class="entry-body">
+        <ul class="meaning-list">
+          <li><b>流體力學：</b>$\vec A$ = 流速場，旋度代表流體在這一點的局部渦旋轉速（角速度的兩倍）</li>
+          <li><b>磁場：</b>$\nabla\times\vec B=\mu_0\vec J$（安培定律微分形式），電流密度 $\vec J$ 是磁場旋轉的源頭</li>
+          <li><b>靜電場：</b>$\nabla\times\vec E=0$，因為靜電場是梯度場（保守場），不會形成環流</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="entry" data-search="數學意義 旋轉傾向 向量 轉軸">
+      <div class="entry-label">數學意義</div>
+      <div class="entry-body"><p>旋度衡量向量場在某一點的「旋轉傾向」，是向量，因為轉動需要指定轉軸方向，不同轉軸算出來的旋轉強度不一樣，所以三個方向分量各自代表繞不同軸轉動的強度。</p></div>
+    </div>
+
+    <div class="entry" data-search="斯托克斯定理 積分定理 環流">
+      <div class="entry-label">對應的積分定理：斯托克斯定理</div>
+      <div class="entry-body">
+        <div class="formula-box">$$\oint_C\vec A\cdot d\vec\ell=\int_S(\nabla\times\vec A)\cdot d\vec S$$</div>
+        <p>封閉迴路的環流，等於內部旋度的面積分總和——邊界（1維曲線）上量到的東西，等於內部（2維曲面）微分量的積分。</p>
+      </div>
+    </div>
+
+    <div class="entry" data-search="跟另外兩者的關聯 梯度場的旋度 旋度場的散度">
+      <div class="entry-label">跟另外兩者的關聯</div>
+      <div class="entry-body">
+        <div class="formula-box small">$\nabla\times(\nabla V)=0$ &nbsp;·&nbsp; $\nabla\cdot(\nabla\times\vec A)=0$</div>
+        <p>梯度場的旋度恆為 0；旋度場的散度恆為 0——兩個 null identity 都跟旋度直接相關。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 計算難度排序 always visible below tabs content, part of overview but useful everywhere -->
+  <div class="panel" data-search="計算難度排序 注意事項 座標系 陷阱">
+    <h2>計算難度與注意事項排序</h2>
+    <div class="dim-row"><span class="dim-badge" style="color:var(--grad-color)">1 · Gradient</span><span>最簡單，直接偏微分，不需要行列式</span></div>
+    <div class="dim-row"><span class="dim-badge" style="color:var(--div-color)">2 · Divergence</span><span>次簡單，直接偏微分後相加；非卡氏座標要注意尺度因子在偏導數<b style="color:var(--text-primary)">內部</b>（不是外面乘）</span></div>
+    <div class="dim-row"><span class="dim-badge" style="color:var(--curl-color)">3 · Curl</span><span>最複雜，需要用行列式展開；非卡氏座標要注意行列式<b style="color:var(--text-primary)">第一列與第三列都要乘</b>尺度因子，且最前面還要<b style="color:var(--text-primary)">除以</b>尺度因子乘積</span></div>
+  </div>
+
+  <footer>向量分析 CH2 · 個人查詢卡</footer>
+</div>
+
+<script>
+// ---- Tabs ----
+const tabBtns = document.querySelectorAll('.tab-btn');
+const pages = document.querySelectorAll('.op-page');
+function activateTab(target){
+  tabBtns.forEach(b=>b.classList.toggle('active', b.dataset.target===target));
+  pages.forEach(p=>p.classList.toggle('active', p.id==='page-'+target));
+}
+tabBtns.forEach(btn=>{
+  btn.addEventListener('click', ()=>activateTab(btn.dataset.target));
+});
+
+// ---- Search ----
+const searchInput = document.getElementById('search');
+const resultsBox = document.getElementById('search-results');
+
+// Build index from entries + panels with data-search
+function buildIndex(){
+  const items = [];
+  document.querySelectorAll('[data-search]').forEach(el=>{
+    const keywords = el.getAttribute('data-search') || '';
+    const label = el.querySelector('.entry-label') ? el.querySelector('.entry-label').textContent : (el.querySelector('h2') ? el.querySelector('h2').textContent : '內容');
+    const bodyText = (el.querySelector('.entry-body') || el).textContent.trim().replace(/\s+/g,' ').slice(0,90);
+    let pageId = el.closest('.op-page') ? el.closest('.op-page').id.replace('page-','') : 'overview';
+    let color = 'var(--overview-color)';
+    if(pageId==='gradient') color='var(--grad-color)';
+    else if(pageId==='divergence') color='var(--div-color)';
+    else if(pageId==='curl') color='var(--curl-color)';
+    items.push({el, keywords: (keywords+' '+label).toLowerCase(), label, snippet: bodyText, pageId, color});
+  });
+  return items;
+}
+const index = buildIndex();
+
+searchInput.addEventListener('input', ()=>{
+  const q = searchInput.value.trim().toLowerCase();
+  if(!q){ resultsBox.classList.remove('open'); resultsBox.innerHTML=''; return; }
+  const matches = index.filter(it => it.keywords.includes(q) || it.snippet.toLowerCase().includes(q));
+  if(matches.length===0){
+    resultsBox.innerHTML = '<div class="no-result">找不到符合「'+searchInput.value+'」的內容</div>';
+  } else {
+    resultsBox.innerHTML = matches.slice(0,12).map((m,i)=>{
+      return '<div class="result-item" data-idx="'+i+'">'+
+        '<span class="result-tag" style="color:'+m.color+';border:1px solid '+m.color+'">'+
+          (m.pageId==='overview'?'總覽':m.pageId==='gradient'?'梯度':m.pageId==='divergence'?'散度':'旋度')+
+        '</span>'+
+        '<span class="result-text">'+m.label+'<span class="snippet">'+m.snippet+'…</span></span>'+
+      '</div>';
+    }).join('');
+    resultsBox._matches = matches;
+  }
+  resultsBox.classList.add('open');
+});
+
+resultsBox.addEventListener('click', (e)=>{
+  const item = e.target.closest('.result-item');
+  if(!item) return;
+  const idx = parseInt(item.dataset.idx,10);
+  const match = resultsBox._matches[idx];
+  activateTab(match.pageId);
+  resultsBox.classList.remove('open');
+  searchInput.value='';
+  setTimeout(()=>{
+    match.el.scrollIntoView({behavior:'smooth', block:'center'});
+    match.el.classList.add('highlight-flash');
+    setTimeout(()=>match.el.classList.remove('highlight-flash'), 1600);
+  }, 80);
+});
+
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.search-wrap')) resultsBox.classList.remove('open');
+});
+
+// ---- KaTeX render ----
+document.addEventListener('DOMContentLoaded', function(){
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$', right:'$$', display:true},
+      {left:'$', right:'$', display:false}
+    ],
+    throwOnError:false
+  });
+});
+</script>
+</body>
+</html>
