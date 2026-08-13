@@ -720,6 +720,24 @@
   .calday-item-txt{ flex:1; min-width:0; color:var(--text); font-size:0.84rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .calday-item-val{ font-size:0.76rem; color:var(--sub); flex-shrink:0; }
 
+  /* ============ 讀書日記 ============ */
+  .diary-day-dots{ display:flex; gap:2px; justify-content:center; flex-wrap:wrap; max-width:30px; margin-top:2px; }
+  .diary-dot{ width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+  .diary-subj-group{ margin-bottom:14px; }
+  .diary-subj-group:last-child{ margin-bottom:0; }
+  .diary-subj-head{ font-size:0.78rem; font-weight:700; margin-bottom:6px; }
+  .diary-entry{
+    display:flex; align-items:flex-start; gap:8px; padding:8px 10px; border-radius:10px;
+    border:1px solid var(--border); background:var(--card2); margin-bottom:6px; font-size:0.84rem;
+  }
+  .diary-entry-txt{ flex:1; min-width:0; color:var(--text); white-space:pre-wrap; word-break:break-word; line-height:1.5; }
+  .diary-del{
+    flex-shrink:0; border:none; background:none; color:var(--faint); cursor:pointer; font-size:0.78rem;
+    padding:2px 4px; border-radius:6px; line-height:1;
+  }
+  .diary-del:hover{ color:var(--danger); background:var(--danger-soft); }
+  .diary-add{ margin-top:16px; padding-top:14px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px; }
+
   /* ============ 設定 ============ */
   .settings-sec{ margin-bottom:26px; }
   .settings-sec-title{ font-size:0.78rem; font-weight:680; color:var(--faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:11px; }
@@ -1281,6 +1299,10 @@
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
       行事曆
     </button>
+    <button class="nav-item" data-view="diary" onclick="switchView('diary')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      讀書日記
+    </button>
     <button class="nav-item" data-view="achievements" onclick="switchView('achievements')">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5L17 22l-5-3-5 3 1.5-8.5"/></svg>
       成就
@@ -1577,6 +1599,35 @@
       </div>
     </section>
 
+    <!-- ========== 讀書日記 ========== -->
+    <section class="view" id="view-diary">
+      <div class="view-head">
+        <div>
+          <div class="view-title">讀書日記</div>
+          <div class="view-sub">記錄你每天讀了什麼，獨立於提醒事項行事曆</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="calhead">
+          <button class="navbtn" onclick="diaryPrevMonth()">‹</button>
+          <span class="title" id="diaryCalTitle"></span>
+          <button class="navbtn" onclick="diaryNextMonth()">›</button>
+        </div>
+        <div class="cal-grid" id="diaryCalGrid"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="card-title" id="diaryDayTitle">今天</div></div>
+        <div id="diaryDayList"></div>
+        <div class="diary-add">
+          <label class="field-label">科目</label>
+          <select class="inp" id="diarySubjectSelect"></select>
+          <label class="field-label">讀書內容</label>
+          <textarea class="inp" id="diaryNoteInput" placeholder="今天讀了什麼？重點、心得、待複習的地方…"></textarea>
+          <button class="btn primary" onclick="submitDiaryEntry()">＋ 新增讀書記錄</button>
+        </div>
+      </div>
+    </section>
+
     <!-- ========== 成就 ========== -->
     <section class="view" id="view-achievements">
       <div class="view-head">
@@ -1742,6 +1793,10 @@
     <button class="mnav-item" data-view="calendar" onclick="switchView('calendar')">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
       行事曆
+    </button>
+    <button class="mnav-item" data-view="diary" onclick="switchView('diary')">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      讀書日記
     </button>
     <button class="mnav-item" data-view="achievements" onclick="switchView('achievements')">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5L17 22l-5-3-5 3 1.5-8.5"/></svg>
@@ -4217,6 +4272,7 @@ function exportData(){
     achievements: loadAchievements(), reviewFlags: loadReviewFlags(),
     subjectBooks: loadSubjectBooks(), reviewInterval: getReviewInterval(),
     tasks: loadTasks(), flashcards: loadFlashcards(), moods: loadMoods(),
+    diary: loadDiary(),
   };
   const blob = new Blob([JSON.stringify(bundle,null,2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
@@ -4250,6 +4306,7 @@ function importData(evt){
         if (data.tasks) saveTasks(data.tasks);
         if (data.flashcards) saveFlashcards(data.flashcards);
         if (data.moods) saveMoods(data.moods);
+        if (data.diary) saveDiary(data.diary);
         if (data.reviewInterval) localStorage.setItem(REVIEW_INTERVAL_KEY, String(data.reviewInterval));
       } else {
         state = data;
@@ -4531,6 +4588,166 @@ function renderTomorrowPlan(){
 
 function openTodayTaskModal(){ openDayModal(todayStr()); }
 function openTomorrowTaskModal(){ openDayModal(tomorrowStr()); }
+
+/* ============================================================
+   讀書日記：獨立行事曆 + 逐日讀書記錄（不與提醒事項行事曆共用資料）
+   ============================================================ */
+
+const DIARY_KEY = "diaryEntries_v1";
+
+function loadDiary(){
+  try{ return JSON.parse(localStorage.getItem(DIARY_KEY)) || []; }catch(e){ return []; }
+}
+function saveDiary(list){ localStorage.setItem(DIARY_KEY, JSON.stringify(list)); }
+
+function addDiaryEntry(dateStr, subjectKey, note){
+  note = (note||"").trim();
+  if (!note) return null;
+  const list = loadDiary();
+  const entry = {
+    id: "diary_" + Date.now() + "_" + Math.random().toString(36).slice(2,5),
+    date: dateStr, subjectKey: subjectKey || null, note,
+  };
+  list.push(entry);
+  saveDiary(list);
+  return entry;
+}
+
+function deleteDiaryEntry(id){
+  saveDiary(loadDiary().filter(e=>e.id!==id));
+  renderDiaryDay();
+  renderDiaryCalendar();
+}
+
+const DIARY_PALETTE = ["--ios-red","--ios-orange","--ios-yellow","--ios-green","--ios-mint","--ios-teal","--ios-blue","--ios-indigo","--ios-purple","--ios-pink","--ios-brown"];
+function diaryColorFor(key){
+  const k = key || "_none";
+  let h = 0;
+  for (let i=0;i<k.length;i++) h = (h*31 + k.charCodeAt(i)) >>> 0;
+  return `var(${DIARY_PALETTE[h % DIARY_PALETTE.length]})`;
+}
+
+let diaryCalView = (function(){ const d=new Date(); return {y:d.getFullYear(), m:d.getMonth()}; })();
+let selectedDiaryDay = todayStr();
+
+function diaryPrevMonth(){
+  diaryCalView.m--;
+  if (diaryCalView.m<0){ diaryCalView.m=11; diaryCalView.y--; }
+  renderDiaryCalendar();
+}
+function diaryNextMonth(){
+  diaryCalView.m++;
+  if (diaryCalView.m>11){ diaryCalView.m=0; diaryCalView.y++; }
+  renderDiaryCalendar();
+}
+
+function renderDiaryCalendar(){
+  const grid = document.getElementById("diaryCalGrid");
+  const title = document.getElementById("diaryCalTitle");
+  if (!grid || !title) return;
+  const {y,m} = diaryCalView;
+  title.textContent = `${y} 年 ${m+1} 月`;
+
+  const diaryMap = {};
+  loadDiary().forEach(en=>{
+    (diaryMap[en.date] = diaryMap[en.date] || new Set()).add(en.subjectKey || "_none");
+  });
+
+  const first = new Date(y, m, 1);
+  const startOffset = first.getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const daysInPrevMonth = new Date(y, m, 0).getDate();
+  const todayS = todayStr();
+
+  let cells = [];
+  for (let i=0;i<startOffset;i++) cells.push({dayNum: daysInPrevMonth - startOffset + 1 + i, muted:true, dateStr:null});
+  for (let d=1; d<=daysInMonth; d++) cells.push({dayNum:d, muted:false, dateStr:`${y}-${pad2(m+1)}-${pad2(d)}`});
+  let nextDay = 1;
+  while (cells.length % 7 !== 0) cells.push({dayNum: nextDay++, muted:true, dateStr:null});
+
+  const dowHtml = ["日","一","二","三","四","五","六"].map(d=>`<div class="cal-dow">${d}</div>`).join("");
+  const daysHtml = cells.map(c=>{
+    if (c.muted) return `<div class="cal-day muted"><span class="daynum">${c.dayNum}</span></div>`;
+    const isToday = c.dateStr === todayS;
+    const isSelected = c.dateStr === selectedDiaryDay;
+    const subjKeys = Array.from(diaryMap[c.dateStr] || []).slice(0,6);
+    const dotsHtml = subjKeys.length
+      ? `<div class="diary-day-dots">${subjKeys.map(k=>`<span class="diary-dot" style="background:${diaryColorFor(k)}"></span>`).join("")}</div>`
+      : "";
+    return `<div class="cal-day ${isToday?"today":""} ${isSelected?"selected":""}" onclick="selectDiaryDay('${c.dateStr}')">
+      <span class="daynum">${c.dayNum}</span>
+      ${dotsHtml}
+    </div>`;
+  }).join("");
+
+  grid.innerHTML = dowHtml + daysHtml;
+}
+
+function selectDiaryDay(dateStr){
+  selectedDiaryDay = dateStr;
+  renderDiaryCalendar();
+  renderDiaryDay();
+}
+
+function formatDiaryDayTitle(dateStr){
+  const [y,m,d] = dateStr.split("-").map(Number);
+  const wd = ["日","一","二","三","四","五","六"][new Date(y,m-1,d).getDay()];
+  return `${y}/${m}/${d}（週${wd}）`;
+}
+
+function populateDiarySubjectSelect(){
+  const sel = document.getElementById("diarySubjectSelect");
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = Object.keys(SUBJECTS).map(k=>`<option value="${k}">${escapeHtml(SUBJECTS[k].name)}</option>`).join("");
+  if (prev && SUBJECTS[prev]) sel.value = prev;
+}
+
+function renderDiaryDay(){
+  const titleEl = document.getElementById("diaryDayTitle");
+  const listEl = document.getElementById("diaryDayList");
+  if (!titleEl || !listEl) return;
+  titleEl.textContent = formatDiaryDayTitle(selectedDiaryDay);
+
+  const entries = loadDiary().filter(e=>e.date===selectedDiaryDay);
+  if (!entries.length){
+    listEl.innerHTML = `<div class="empty" style="padding:16px;">這天還沒有讀書記錄</div>`;
+  } else {
+    const groups = {};
+    entries.forEach(e=>{
+      const key = e.subjectKey || "_none";
+      (groups[key] = groups[key] || []).push(e);
+    });
+    listEl.innerHTML = Object.keys(groups).map(key=>{
+      const name = SUBJECTS[key]?.name || "未分類";
+      const color = diaryColorFor(key);
+      const items = groups[key].map(e=>`
+        <div class="diary-entry">
+          <div class="diary-entry-txt">${escapeHtml(e.note)}</div>
+          <button class="diary-del" onclick="deleteDiaryEntry('${e.id}')" title="刪除">✕</button>
+        </div>`).join("");
+      return `<div class="diary-subj-group">
+        <div class="diary-subj-head" style="color:${color}">${escapeHtml(name)}</div>
+        ${items}
+      </div>`;
+    }).join("");
+  }
+
+  populateDiarySubjectSelect();
+}
+
+function submitDiaryEntry(){
+  const sel = document.getElementById("diarySubjectSelect");
+  const input = document.getElementById("diaryNoteInput");
+  if (!sel || !input) return;
+  const note = input.value.trim();
+  if (!note){ toast("先寫一下今天讀了什麼吧"); return; }
+  addDiaryEntry(selectedDiaryDay, sel.value, note);
+  input.value = "";
+  renderDiaryDay();
+  renderDiaryCalendar();
+  toast("已記錄");
+}
 
 /* ============================================================
    v3：記憶卡系統（Leitner 間隔重複）
@@ -5402,6 +5619,7 @@ function switchView(v){
   if (v==="subjects" && !currentSubject) renderSubjectGrid();
   if (v==="stats") renderStatsView();
   if (v==="calendar"){ renderMonthCalendar(); renderExamCalendar(); }
+  if (v==="diary"){ renderDiaryCalendar(); renderDiaryDay(); }
   if (v==="achievements") renderAchievementBadges();
   if (v==="settings") syncSettingsInputs();
   window.scrollTo({top:0, behavior:"instant"});
@@ -5480,7 +5698,7 @@ function closeCmdk(){ document.getElementById("cmdkBack")?.classList.remove("on"
 
 function buildCmdkIndex(){
   const out = [];
-  [["today","今日"],["subjects","科目"],["stats","統計"],["calendar","行事曆"],["achievements","成就"],["settings","設定"]]
+  [["today","今日"],["subjects","科目"],["stats","統計"],["calendar","行事曆"],["diary","讀書日記"],["achievements","成就"],["settings","設定"]]
     .forEach(([v,label])=> out.push({kind:"前往", text:label, run:()=>switchView(v)}));
   out.push({kind:"動作", text:"開始／暫停計時器", run:()=>timerStartPause()});
   out.push({kind:"動作", text:"進入專注全螢幕", run:()=>enterZen()});
@@ -5564,9 +5782,9 @@ document.addEventListener("keydown", (e)=>{
   }
   if (e.code === "Space"){ e.preventDefault(); timerStartPause(); return; }
   if (e.key.toLowerCase() === "f"){ e.preventDefault(); document.getElementById("zenMode")?.classList.contains("on") ? exitZen() : enterZen(); return; }
-  const views = ["today","subjects","stats","calendar","achievements","settings"];
+  const views = ["today","subjects","stats","calendar","diary","achievements","settings"];
   const n = parseInt(e.key,10);
-  if (n>=1 && n<=6){ e.preventDefault(); if (currentSubject) closeSubject(); switchView(views[n-1]); }
+  if (n>=1 && n<=7){ e.preventDefault(); if (currentSubject) closeSubject(); switchView(views[n-1]); }
 });
 
 /* ---------- 初始化 ---------- */
